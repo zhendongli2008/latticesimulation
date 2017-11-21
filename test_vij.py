@@ -47,7 +47,9 @@ def genEVmpo(n,a,ng=40):
    wij = numpy.einsum('i,ij,j->ij',numpy.sqrt(wts),wij,numpy.sqrt(wts))
    # Wij = V[i,k]e[k]V[j,k] = A[i,k]A[j,k] => BAD for large ng !!!
    eig,v = scipy.linalg.eigh(wij)
-   #eig[numpy.argwhere(eig<0.0)] = 0.0
+   print 'ng=',ng
+   print eig
+   eig[numpy.argwhere(eig<0.0)] = 0.0
    wka = numpy.einsum('ik,k->ik',v,numpy.sqrt(eig))
    # OBC
    tij = numpy.diag([1.0]*n)
@@ -139,10 +141,11 @@ def testVmpo(n,a):
        (numpy.sinh(kappa0*L))
    plt.plot(x,z,'b--',label='Exact_OBC')
    # Numerical
-   for ng,color in zip([10,20,30,40,50,60],['r','b','g','k','c','y']):
+   #for ng,style in zip([10],['r']):
+   for ng,style in zip([10,20,30,40,50,60],['r-','b-','g-','k-','c+','y+']):
       vmpo = genEVmpo(n,a,ng)
       vij_mid = numpy.array([genVij(int(n/2),i) for i in range(n)])
-      plt.plot(x,vij_mid,color+'-',label='Num_OBC (ng='+str(ng)+')')
+      plt.plot(x,vij_mid,style,label='Num_OBC (ng='+str(ng)+')')
    plt.legend()
    plt.show()
    return 0
@@ -150,4 +153,7 @@ def testVmpo(n,a):
 if __name__ == '__main__':
    n = 101
    a = 0.2
+   L = n*a
+   n = 51
+   a = L/n
    testVmpo(n,a)
