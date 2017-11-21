@@ -56,6 +56,16 @@ def randomMPS(n,D=1):
    mps.normalize()
    return mps
 
+def prodMPS(n):
+   wfacs = [numpy.ones((1,4,1))/2.0]
+   for i in range(n-2): 
+      wfacs.append(numpy.ones((1,4,1))/2.0)
+   wfacs.append(numpy.ones((1,4,1))/2.0)
+   mps = mps_class.class_mps(n,sites=wfacs,iop=1)
+   print mps.dot(mps)
+   return mps
+
+
 def genEvenOdd(n,iop,vl,vr):
    io = numpy.zeros((1,1,4,4))
    io[0,0] = numpy.identity(4)

@@ -15,7 +15,7 @@ L = 10 #8 # one sided [-L,L]
 nc = int(L/a)
 n = 2*nc+1
 beta = 0.1
-tau = 0.001 #5
+tau = 0.0001 #5
 nsteps = int(beta/tau)
 x = numpy.linspace(-L,L,num=n,endpoint=True)
 print 'beta,tau,nsteps=',(beta,tau,nsteps)
@@ -42,12 +42,12 @@ if ifplot:
 prj_empo,prj_ompo,prj_dmpo = lattice_helper.genPmpo(n,a,tau)
 hmpo = lattice_helper.genHmpo(n,a,vne[::2])
 nmpo = lattice_helper.genNmpo(n)
-vmpo = lattice_vij.genEVmpo(n,a,ng=24)
+vmpo = lattice_vij.genEVmpo(n,a,ng=10)
 
 # Exact construction
-mps0 = lattice_helper.randomMPS(n,D=10)
-mps = lattice_helper.genSmps(v[:,0])
-mps = mps.add(mps0)
+mps = lattice_helper.prodMPS(n)
+#mps0 = lattice_helper.genSmps(v[:,0])
+#mps = mps.add(mps0)
 mps.normalize()
 print '<MPS|1|MPS>=',mps.dot(mps)
 print '<MPS|N|MPS>=',mps.dot(nmpo.dotMPS(mps))
@@ -71,7 +71,7 @@ mus = numpy.zeros(nsteps)
 ne = 2.0
 ni = mps.dot(nmpo.dotMPS(mps))
 mu = ne-ni
-D = 10
+D = 4
 for i in range(nsteps):
    print ' x0:In',mps.dot(mps)
    
@@ -97,7 +97,7 @@ for i in range(nsteps):
    ni = mps.dot(nmpo.dotMPS(mps))
    energy[i] = ei
    mus[i] = mu
-   mu = mu-0.1*(ni-ne)
+   mu = 0.0 #mu-(ni-ne)
   
    # check
    print ' x1:Te',nm1
