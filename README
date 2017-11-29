@@ -17,3 +17,5 @@ TODOs:
 
  5. 2D case [fPEPS]
 
+ 6. estimate energy by direct computation <Psi|H|Psi>
+    or by fitting correlation functions <Psi|ni*nj|Psi> by exps.
