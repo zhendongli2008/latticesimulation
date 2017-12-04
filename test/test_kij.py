@@ -4,29 +4,20 @@ import matplotlib.pyplot as plt
 from zmpo_dmrg.source.mpsmpo.mpo_class import class_mpo
 from zmpo_dmrg.source.mpsmpo.mps_class import class_mps
 
-A = 1.0
-kappa = 1.0
-
-# Z=A*exp(-kr)
-def getVij(n,a,A,kappa,Z=-1.0):
-   # OBC
-   tij = numpy.diag([2.0+(kappa*a)**2]*n)
-   for i in range(n-1):
-      tij[i,i+1] = tij[i+1,i] = -1.0
-   vij = -Z*A*a*numpy.linalg.inv(tij)*(2*kappa)
-   return vij
+Aref = 1.0 
+kappa0 = 0.1 
 
 
 # 1D: A*exp(-kappa*x) modified from the exponential exp(-a*x)/(2a).
 def genEVmpo(n,a,ng=40):
    # Quadrature
-   sfac = 1.0/(1.0+0.5*kappa**2*a**2)
+   sfac = 1.0/(1.0+0.5*kappa0**2*a**2)
    xts,wts = numpy.polynomial.hermite.hermgauss(ng)
    wij = numpy.exp(sfac*numpy.einsum('i,j->ij',xts,xts))
    wij = numpy.einsum('i,ij,j->ij',numpy.sqrt(wts),wij,numpy.sqrt(wts))
    # Wij = V[i,k]e[k]V[j,k] = A[i,k]A[j,k] => BAD for large ng !!!
    eig,v = scipy.linalg.eigh(wij)
-   print 'ng=',ng
+   print 'n/a/ng=',(n,a,ng)
    print eig
    eig[numpy.argwhere(eig<0.0)] = 0.0
    wka = numpy.einsum('ik,k->ik',v,numpy.sqrt(eig))
@@ -34,7 +25,7 @@ def genEVmpo(n,a,ng=40):
    tij = numpy.diag([1.0]*n)
    for i in range(n-1):
       tij[i,i+1] = tij[i+1,i] = -0.5*sfac
-   cfac = 2.0*kappa
+   cfac = Aref*2.0*kappa0
    nfac = numpy.power(cfac*numpy.sqrt(numpy.linalg.det(tij)),1.0/n)/ \
           numpy.sqrt(numpy.pi)
    # A,B,D
@@ -78,23 +69,35 @@ def genEVmpo(n,a,ng=40):
 
 
 # 1D: A*exp(-kappa*x) modified from the exponential exp(-a*x)/(2a).
-def genEVmpoTaylor(n,a,ng=40):
+def genEVmpoTaylor(n,a,ng=40,iop=0):
    # Quadrature
-   sfac = 1.0/(1.0+0.5*kappa**2*a**2)
+   sfac = 1.0/(1.0+0.5*kappa0**2*a**2)
    # OBC
    tij = numpy.diag([1.0]*n)
    for i in range(n-1):
       tij[i,i+1] = tij[i+1,i] = -0.5*sfac
-   cfac = 2.0*kappa
+   cfac = Aref*2.0*kappa0
    nfac = numpy.power(cfac*numpy.sqrt(numpy.linalg.det(tij)),1.0/n)/ \
           numpy.sqrt(numpy.pi)
-   
+  
    import math
    def denorm(n1,n2=None):
       if n2 == None:
          return 1.0/math.sqrt(float(math.factorial(n1)))
       else:
          return 1.0/math.sqrt(float(math.factorial(n1))*float(math.factorial(n2)))
+
+
+   A0 = numpy.array([0.5*(1+(-1)**n1)*sfac**(n1/2.0)*math.gamma((n1+1.0)/2.0)\
+	      *denorm(n1) for n1 in range(ng)])
+   A1 = numpy.array([[0.5*(1+(-1)**(n1+n2))*sfac**((n1+n2)/2.0)*math.gamma((n1+n2+1.0)/2.0)\
+	      *denorm(n1,n2) for n1 in range(ng)] for n2 in range(ng)])
+   nfac1 = numpy.power(cfac/reduce(numpy.dot,[A0]+[A1]*(n-2)+[A0.T]),1.0/n)
+   print 'n=',n,reduce(numpy.dot,[A0]+[A1]*(n-2)+[A0.T]),\
+		numpy.pi**(n/2.0)/numpy.sqrt(numpy.linalg.det(tij)),\
+		nfac,nfac1
+   # New normalization factor
+   if iop == 1: nfac = nfac1
 
    # A,B,D
    A0 = nfac*numpy.array([0.5*(1+(-1)**n1)*sfac**(n1/2.0)*math.gamma((n1+1.0)/2.0)\
@@ -144,8 +147,54 @@ def genEVmpoTaylor(n,a,ng=40):
 
 
 def test():
+   # (K^-1)ij
+   L = 10 
+   for nc,cl in zip([10,30,60,100,150,200],['r','b','g','y','c','k']):
+      n = 2*nc+1
+      a = L/float(n)
+      sfac = 1.0/(1.0+0.5*kappa0**2*a**2)
+      tij = numpy.diag([1.0]*n)
+      for i in range(n-1):
+         tij[i,i+1] = tij[i+1,i] = -0.5*sfac
+      vii = numpy.diag(scipy.linalg.inv(tij))
+      x = numpy.arange(-nc,nc+1)*a
+      plt.plot(x,vii,cl+'o--',label='N='+str(n))
+   plt.legend()
+   plt.show()
+   # a*gamma*(K^-1)ij
+   L = 10 
+   for nc,cl in zip([10,30,60,100,150,200],['r','b','g','y','c','k']):
+      n = 2*nc+1
+      a = L/float(n)
+      sfac = 1.0/(1.0+0.5*kappa0**2*a**2)
+      print 'a=',a,'sfac=',sfac
+      tij = numpy.diag([1.0]*n)
+      for i in range(n-1):
+         tij[i,i+1] = tij[i+1,i] = -0.5*sfac
+      vii = numpy.diag(scipy.linalg.inv(tij))*a*sfac*kappa0
+      x = numpy.arange(-nc,nc+1)*a
+      plt.plot(x,vii,cl+'o--',label='N='+str(n))
+   plt.legend()
+   plt.show()
+
+   # (K^-1)ij
+   L = 10 
+   nlst = []
+   kvii = []
+   for nc in range(10,100,5):
+      n = 2*nc+1
+      nlst.append(n)
+      a = L/float(n)
+      sfac = 1.0/(1.0+0.5*kappa0**2*a**2)
+      tij = numpy.diag([1.0]*n)
+      for i in range(n-1):
+         tij[i,i+1] = tij[i+1,i] = -0.5*sfac
+      vii = numpy.diag(scipy.linalg.inv(tij))*(a*sfac*kappa0)
+      kvii.append(vii[nc])
+   plt.plot(nlst,kvii,'r+-',label='ExactOBC',markersize=10)
+  
    # V = 1/2*ni*Vij*nj
-   def genVij(vmpo,i,j):
+   def genVij(i,j):
       occ = numpy.zeros(2*n)
       if i == j:
          occ[2*(i-1)] = 1.0
@@ -158,67 +207,29 @@ def test():
       mps = mps.merge([[2*i,2*i+1] for i in range(n)])
       val = mps.dot(vmpo.dotMPS(mps))
       return val
-
-#   L = 10 
-#   for ng,cl in zip([10,20,30,50,80,110],['r','b','g','y','c','k']):
-#      err1 = []
-#      err2 = []
-#      nlst = []
-#      for nc in range(5,100,5):
-#         n = 2*nc+1
-#         nlst.append(n)
-#         a = L/float(n)
-#         # ExactValue
-#         vii = numpy.diag(getVij(n,a,A,kappa))
-#         x = numpy.arange(-nc,nc+1)*a
-#         # Numerical
-#         vmpo = genEVmpoTaylor(n,a,ng)
-#         vij_mid = genVij(vmpo,nc,nc)
-#         diff = abs(vij_mid-vii[nc])
-#         err1.append(diff)
-#         # Gauss
-#	 vmpo = genEVmpo(n,a,ng)
-#         vij_mid = genVij(vmpo,nc,nc)
-#         diff = abs(vij_mid-vii[nc])
-#         err2.append(diff)
-#      # test
-#      plt.plot(nlst,err1,cl+'o-',label=str(ng))
-#      plt.plot(nlst,err2,cl+'o--')#,label=str(ng))
-#      print 'nlst=',nlst
-#      print 'err1=',err1
-#      print 'err2=',err2
-#   plt.legend()
-#   plt.show()
-
-   L = 10 
-   for nc,cl in zip([10,20,30,40,50,60],['r','b','g','y','c','k']):
+   ng = 60 #50
+   nlst = []
+   kvii = []
+   kvii2 = []
+   for nc in range(10,100,5):
       n = 2*nc+1
+      nlst.append(n)
       a = L/float(n)
-      err1 = []
-      err2 = []
-      nlst = []
-      for ng in [10,30,60,90,120,150]:
-         nlst.append(ng)
-         # ExactValue
-         vii = numpy.diag(getVij(n,a,A,kappa))
-         x = numpy.arange(-nc,nc+1)*a
-         # Numerical
-         vmpo = genEVmpoTaylor(n,a,ng)
-         vij_mid = genVij(vmpo,nc,nc)
-         diff = abs(vij_mid-vii[nc])
-         err1.append(diff)
-         # Gauss
-	 vmpo = genEVmpo(n,a,ng)
-         vij_mid = genVij(vmpo,nc,nc)
-         diff = abs(vij_mid-vii[nc])
-         err2.append(diff)
-      # test
-      plt.semilogy(nlst,err1,cl+'o-',label='N='+str(n))
-      plt.semilogy(nlst,err2,cl+'o--')#,label=str(ng))
-      print 'nlst=',nlst
-      print 'err1=',err1
-      print 'err2=',err2
+      #vmpo = genEVmpo(n,a,ng)
+      vmpo = genEVmpoTaylor(n,a,ng)
+      kvii.append(genVij(nc,nc))
+      vmpo = genEVmpoTaylor(n,a,ng,iop=1)
+      kvii2.append(genVij(nc,nc))
+   nlst = numpy.array(nlst)
+   plt.plot(nlst,kvii ,'ro--',label='Ng0='+str(ng))
+   plt.plot(nlst,kvii2,'bo--',label='Ng1='+str(ng))
+   alst = 1.0/nlst
+   vxx = 2.0*kappa0*alst/(2.0+kappa0**2*alst**2)
+   plt.plot(nlst,vxx,'ko--',label='SPA')
+   
+   plt.ylim(-0.1,1.1) 
    plt.legend()
+   plt.savefig('clt.pdf')
    plt.show()
    return 0
 
