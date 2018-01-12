@@ -22,7 +22,7 @@ def genT2d(n,mass=0.0):
    iden = numpy.identity(n)
    mat = numpy.einsum('ij,ab->iajb',tij,iden)\
        + numpy.einsum('ij,ab->iajb',iden,tij)
-   mat = mat + mass*numpy.einsum('ij,ab->iajb',iden,iden)
+   mat = mat + mass**2*numpy.einsum('ij,ab->iajb',iden,iden)
    return mat 
 
 def test_1d(m):
@@ -99,7 +99,8 @@ def curveplot(mass=0.01,k=2,m=30):
       errs1 = numpy.abs(f1(d0r,*popt1)-v0r)
       print ' errs1-exp',numpy.max(errs1)
       print ' popt1-exp',popt1
-      popt2 = scipy.optimize.curve_fit(f2,d0r,v0r,p0=[1.,mass,0.])[0]
+      popt2 = scipy.optimize.curve_fit(f2,d0r,v0r,\
+		      		       p0=[1./(2.0*numpy.pi),mass,0.])[0]
       errs2 = numpy.abs(f2(d0r,*popt2)-v0r)
       print ' errs2-bes',numpy.max(errs2)
       print ' popt2-bes',popt2
@@ -114,37 +115,43 @@ def curveplot(mass=0.01,k=2,m=30):
    d1,v1 = genPairs(tinv,n,m+k,m)
    d2,v2 = genPairs(tinv,n,m+k,m+k)
    
-   x = numpy.linspace(1.e-8,50,1000)
-   popt1a,popt2a,e1a,e2a,d0r,v0r = fit(d0,v0)
-   popt1b,popt2b,e1b,e2b,d1r,v1r = fit(d1,v1)
-   popt1c,popt2c,e1c,e2c,d2r,v2r = fit(d2,v2)
-   
-   plt.plot(x,f1(x,*popt1a),'k-',label='fitted1')
-   plt.plot(x,f2(x,*popt2a),'b-',label='fitted2')
-   #plt.plot(x,f1(x,*popt1b),'k-',label='fitted1')
-   #plt.plot(x,f2(x,*popt2b),'b-',label='fitted2')
-   #plt.plot(x,f1(x,*popt1c),'k--',label='fitted1')
-   #plt.plot(x,f2(x,*popt2c),'b--',label='fitted2')
    plt.plot(d0,v0,'bo',label='(m,m)='+coord(m,m)+' n='+str(n))
    plt.plot(d1,v1,'g+',label='(m+k,m)='+coord(m+k,m)+' n='+str(n))
    plt.plot(d2,v2,'rx',label='(m+k,m+k)='+coord(m+k,m+k)+' n='+str(n))
-   plt.xlim([0,50])
+  
+   iffit = True
+   if iffit:
+      x = numpy.linspace(1.e-8,50,1000)
+      popt1a,popt2a,e1a,e2a,d0r,v0r = fit(d0,v0)
+      popt1b,popt2b,e1b,e2b,d1r,v1r = fit(d1,v1)
+      popt1c,popt2c,e1c,e2c,d2r,v2r = fit(d2,v2)
+      #plt.plot(x,f1(x,*popt1a),'k-',label='fitted-exp')
+      #plt.plot(x,f1(x,*popt1b),'k-',label='fitted-exp')
+      #plt.plot(x,f1(x,*popt1c),'k-',label='fitted-exp')
+      plt.plot(x,f2(x,*popt2a),'b--',label='fitted-bes')
+      plt.plot(x,f2(x,*popt2b),'g--',label='fitted-bes')
+      plt.plot(x,f2(x,*popt2c),'r--',label='fitted-bes')
+
+   plt.xlim([0,4*k])
    tm = numpy.max(tinv)
    plt.ylim([-0.1,tm*1.01])
    plt.legend()
    plt.savefig('data/fr.pdf')
    plt.show()
-   # Error 
-   plt.semilogy(d0r,e1a,'bo-',label='c-exp')
-   plt.semilogy(d0r,e2a,'ro-',label='c-bes')
-   #plt.semilogy(d1r,e1b,'bo--',label='v-exp')
-   #plt.semilogy(d1r,e2b,'bo-',label='v-bes')
-   #plt.semilogy(d2r,e1c,'go--',label='d-exp')
-   #plt.semilogy(d2r,e2c,'go-',label='d-bes')
-   plt.xlim([0,numpy.max(d0r)*1.2])
-   plt.legend()
-   plt.savefig('data/err.pdf')
-   plt.show()
+
+   iferr= True
+   if iffit and iferr:
+      # Error 
+      #plt.semilogy(d0r,e1a,'bo-',label='c-exp')
+      #plt.semilogy(d1r,e1b,'bo-',label='v-exp')
+      #plt.semilogy(d2r,e1c,'go-',label='d-exp')
+      plt.semilogy(d0r,e2a,'ro-',label='c-bes')
+      plt.semilogy(d1r,e2b,'bo-',label='v-bes')
+      plt.semilogy(d2r,e2c,'go-',label='d-bes')
+      plt.xlim([0,numpy.max(d0r)*1.2])
+      plt.legend()
+      plt.savefig('data/err.pdf')
+      plt.show()
    return 0
 
 def fitCoulomb(k=5,m=10):
@@ -244,20 +251,15 @@ def fitCoulomb(k=5,m=10):
 
 
 if __name__ == '__main__':
-   
-   # why a single component is noisy? 
-   fitCoulomb(k=10,m=30)
-   #fitCoulomb(k=2,m=30)
-   #curveplot(mass=0.1,k=5,m=30)
 
+#===========
 # Benchmark
 #===========
-
 # 0. Compute f(r) w.r.t. center - whether it is isotropic
-
 # 1. compare different lattice size - shift measure center (i,j) to boundary 
-
 # 2. compare different lambda?
+   
+   #fitCoulomb(k=10,m=30)
+   curveplot(mass=0.001,k=5,m=50)
+   #curveplot(mass=0.001,k=5,m=40)
 
-#    what about in the generation of interaction, a is not multiplied?
-#    understand it from 1D analytic expressions & numerical test !!!
