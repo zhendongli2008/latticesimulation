@@ -1,1 +1,7 @@
 *.pyc
+*.aux
+*.log
+*.pdf
+*.synctex.gz
+*.tex.bak
+*.bib

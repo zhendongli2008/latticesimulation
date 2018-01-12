@@ -1,0 +1,67 @@
+\documentclass[aip,jcp,numerical,preprint]{revtex4-1}
+%\documentclass[a4paper,12pt,aip,jcp,reprint]{revtex4-1}
+%\usepackage[left=15mm,right=15mm,top=15mm,bottom=15mm,includehead,includefoot]{geometry
+%}
+\usepackage{color}
+\usepackage{graphicx}
+\usepackage{threeparttable}
+%\usepackage[dvips]{graphics}
+\usepackage{longtable}
+\usepackage{enumerate}
+\usepackage{amsfonts,amssymb}
+\usepackage{amsmath}
+\usepackage{stmaryrd}
+\usepackage{dcolumn}
+\usepackage{bm}
+\usepackage{bbm}
+%\usepackage[lined,boxed,commentsnumbered,ruled]{algorithm2e}
+\usepackage{algpseudocode}
+\usepackage{algorithm}
+\usepackage[all,cmtip]{xy}
+\usepackage{url}
+
+%\renewcommand{\baselinestretch}{2}
+
+\bibpunct{}{}{,}{s}{}{\textsuperscript{,}}  % upper cite
+
+\newcommand{\ohalf}{\frac{1}{2}}
+\newcommand{\tr}{\mathrm{tr}}
+\newcommand{\ii}{\mathbbm{i}}
+\newcommand{\spn}{\mathrm{span}}
+
+\begin{document}
+%-----------------------------------------------------------------
+%   以下内容可以修改
+%-----------------------------------------------------------------
+
+%\title{Note on computing Gaussian integration}
+%\author{Zhendong Li}
+%\maketitle
+
+\section{Fitting}
+
+\begin{figure}
+\begin{tabular}{cc}
+\includegraphics[width=0.5\textwidth]{../data/fitCoulomb_terms_13_nk_21_n_41} &
+\includegraphics[width=0.5\textwidth]{../data/fitCoulomb_terms_13_nk_21_n_51} \\
+\includegraphics[width=0.5\textwidth]{../data/fitCoulomb_terms_13_nk_21_n_61} &
+\includegraphics[width=0.5\textwidth]{../data/fitCoulomb_terms_13_nk_21_n_71} \\
+\includegraphics[width=0.5\textwidth]{../data/fitCoulomb_terms_13_nk_21_n_81} &
+\includegraphics[width=0.5\textwidth]{../data/fitCoulomb_terms_13_nk_21_n_91} \\
+%\includegraphics[width=0.5\textwidth]{../data/fitCoulomb_terms_13_nk_21_n_101} &
+\end{tabular}
+  \caption{Numerical comparison of $(K^{-1})_{ij}$ on 2D systems with size $n\times n$.}
+\end{figure}
+
+
+
+
+
+
+
+%\begin{thebibliography}{}
+% adaptive
+%\bibitem{fink} R. F. Fink, J. Chem. Phys. {\bf 133}, 174113 (2010).
+%\end{thebibliography}
+
+\end{document}

@@ -5,7 +5,7 @@ from zmpo_dmrg.source.mpsmpo.mpo_class import class_mpo
 from zmpo_dmrg.source.mpsmpo.mps_class import class_mps
 
 Aref = 1.0 
-kappa0 = 0.01 #0#10 #0 #0
+kappa0 = 1.0 #0#10 #0 #0
 
 # 1D: A*exp(-kappa*x) modified from the exponential exp(-a*x)/(2a).
 def genEVmpo(n,a,ng=40):
@@ -147,10 +147,10 @@ def genEVmpoTaylor(n,a,ng=40,iop=0):
 
 def test():
    # (K^-1)ij
-   L = 40
+   L = 10
    nlst = []
    kii = []
-   for nc in range(2,500,10):
+   for nc in range(2,100,10):
       n = 2*nc+1
       nlst.append(n)
       a = L/float(n+1)
@@ -182,22 +182,21 @@ def test():
    ng = 10
    kvii = []
    kvii2 = []
-   for nc in range(2,500,10):
+   for nc in range(2,100,10):
       n = 2*nc+1
       a = L/float(n+1)
       sfac = 1.0/(1.0+0.5*kappa0**2*a**2)
-      #vmpo = genEVmpoTaylor(n,a,ng)
-      #kvii.append(genVij(nc,nc)/a)
       vmpo = genEVmpoTaylor(n,a,ng,iop=1)
-      kvii2.append(genVij(nc,nc)/(a*sfac*kappa0))
+      kvii.append(genVij(nc,nc)/a)
       vmpo = genEVmpo(n,a,ng)
-      kvii.append(genVij(nc,nc)/(a*sfac*kappa0))
+      kvii2.append(genVij(nc,nc)/a)
    kvii = numpy.array(kvii)
    kvii2 = numpy.array(kvii2)
-   plt.plot(nlst,kvii ,'r+--',label='Ng0='+str(ng))
-   plt.plot(nlst,kvii2,'b+--',label='Ng1='+str(ng))
-   plt.plot(nlst,nlst ,'g-')
+   plt.plot(nlst,kvii ,'r+--',label='Taylor')
+   plt.plot(nlst,kvii2,'b+--',label='Gauss')
+   #plt.plot(nlst,nlst ,'g-')
    plt.legend(loc=2)
+   plt.savefig('kii.pdf')
    plt.show()
    return 0
 

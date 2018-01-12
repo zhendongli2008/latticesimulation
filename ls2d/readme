@@ -1,0 +1,21 @@
+
+ TODOs:
+
+   benchmark exact result on 2D; center of 20-by-20?
+   let me know how the potential fitting works. 
+  
+----------------------------------------------------------------------
+
+DONE - 1. Generate exact result on 2D lattice by direct inversion
+
+ 2. Numerical approximation of the correlation functions
+
+----------------------------------------------------------------------
+
+ 3. Construction of PEPO 
+
+ 4. Fitting?
+
+ 5. Real simulation of 2D systems
+
+----------------------------------------------------------------------
