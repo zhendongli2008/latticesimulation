@@ -1,0 +1,11 @@
+
+TODOs:
+
+ 1. improved scaling
+
+ 2. PBC - may be better => Not good due to long-range interaction between boundary !!!
+
+ 3. numerical problems
+
+ 4. use Hermite to replace quadrature!
+

@@ -8,14 +8,28 @@
 
 DONE - 1. Generate exact result on 2D lattice by direct inversion
 
- 2. Numerical approximation of the correlation functions
+DONE - 2. Numerical approximation of the correlation functions
+
+       2.5 Mapping to Ising model?	
 
 ----------------------------------------------------------------------
 
- 3. Construction of PEPO 
+ 3. Construction of PEPO? 
 
  4. Fitting?
 
- 5. Real simulation of 2D systems
+ 5. Real simulation of 2D spin systems?
+
+----------------------------------------------------------------------
+
+Benchmark data [DONE]:
+   1. FCI
+   2. BLOCK for 5-by-5 or 6-by-6
+
+----------------------------------------------------------------------
+
+*** The crucial question for finite system is that is there any 
+    advantage to use PEPO versus term by term construction with 
+    parallelization? e.g., in VMC optimizaitons.  
 
 ----------------------------------------------------------------------

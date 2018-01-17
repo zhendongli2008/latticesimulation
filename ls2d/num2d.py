@@ -1,80 +1,104 @@
 import numpy
+import scipy.linalg
+import contraction2d
+import matplotlib.pyplot as plt
 import exact2d
 
-# 1D: A*exp(-kappa*x) modified from the exponential exp(-a*x)/(2a).
-def genVpeps(n,a,ng=40):
-   # Quadrature
-   sfac = 1.0/(1.0+0.5*kappa0**2*a**2)
+def genVpeps(n,mass2=1.0,ng=3,pa=(1,1),pb=(1,2),iprt=0,auxbond=None):
+   
+   # Generation
+   alpha = 2.0+mass2/2.0
    xts,wts = numpy.polynomial.hermite.hermgauss(ng)
-   wij = numpy.exp(sfac*numpy.einsum('i,j->ij',xts,xts))
-   wij = numpy.einsum('i,ij,j->ij',numpy.sqrt(wts),wij,numpy.sqrt(wts))
-   # Wij = V[i,k]e[k]V[j,k] = A[i,k]A[j,k] => BAD for large ng !!!
+   xts = xts/numpy.sqrt(alpha)
+   wts = wts/numpy.sqrt(alpha)
+   if iprt>0:
+      print '\n[genVpeps]'
+      print ' alpha =',alpha
+      print ' xts =',xts
+      print ' wts =',wts
+   # Wij = V[i,k]e[k]V[j,k] = A[i,k]A[j,k] 
+   wij = numpy.zeros((ng,ng))
+   for i in range(ng):
+      for j in range(ng):
+         wij[i,j] = numpy.exp(xts[i]*xts[j])*\
+	 	    numpy.power(wts[i]*wts[j],0.25) # Absorb 1/4 for each bond(i,j)
    eig,v = scipy.linalg.eigh(wij)
-   print 'ng=',ng
-   print eig
+   print ' eig =',eig
    eig[numpy.argwhere(eig<0.0)] = 0.0
    wka = numpy.einsum('ik,k->ik',v,numpy.sqrt(eig))
-   # OBC
-   tij = numpy.diag([1.0]*n)
-   for i in range(n-1):
-      tij[i,i+1] = tij[i+1,i] = -0.5*sfac
-   cfac = Aref #*2.0*kappa0
-   nfac = numpy.power(cfac*numpy.sqrt(numpy.linalg.det(tij)),1.0/n)/ \
-          numpy.sqrt(numpy.pi)
-   # A,B,D
-   A0 = nfac*numpy.einsum('k,ka->a',numpy.sqrt(wts),wka)
-   B0 = nfac*numpy.einsum('k,ka->a',numpy.sqrt(wts)*xts,wka)*numpy.sqrt(sfac*a)
-   D0 = nfac*numpy.einsum('k,ka->a',numpy.sqrt(wts)*xts*xts,wka)*(sfac*a)
-   A1 = nfac*numpy.einsum('ka,kb->ab',wka,wka)
-   B1 = nfac*numpy.einsum('k,ka,kb->ab',xts,wka,wka)*numpy.sqrt(sfac*a)
-   D1 = nfac*numpy.einsum('k,ka,kb->ab',xts*xts,wka,wka)*(sfac*a)
-   ###debug: print '\nn,a,ng=',(n,a,ng)
-   ###debug: print 'wts',numpy.max(abs(wts))
-   ###debug: print 'Wka',numpy.log10(numpy.max(abs(wka)))
-   ###debug: print 'A0',numpy.max(abs(A0))
-   ###debug: #print 'B0',numpy.max(abs(B0))
-   ###debug: #print 'D0',numpy.max(abs(D0))
-   ###debug: print 'A1',numpy.max(abs(A1))
-   ###debug: #print 'B1',numpy.max(abs(B1))
-   ###debug: print 'D1',numpy.max(abs(D1))
-   # Construction of MPOs 
-   idn = numpy.identity(4)
-   nii = numpy.zeros((4,4))
-   nii[1,1] = 1.0
-   nii[2,2] = 1.0
-   nud = numpy.zeros((4,4))
-   nud[3,3] = 1.0
-   # first [A0,B0,D0]
-   site0 = numpy.zeros((1,3*ng,4,4))
-   site0[0,:ng]     = numpy.einsum('a,mn->amn',A0,idn)
-   site0[0,ng:2*ng] = numpy.einsum('a,mn->amn',B0,nii)
-   site0[0,2*ng:]   = numpy.einsum('a,mn->amn',D0,nud)
-   # last [D0,B0,A0]
-   site1 = numpy.zeros((3*ng,1,4,4))
-   site1[:ng,0]     = numpy.einsum('a,mn->amn',D0,nud)
-   site1[ng:2*ng,0] = numpy.einsum('a,mn->amn',B0,nii)
-   site1[2*ng:,0]   = numpy.einsum('a,mn->amn',A0,idn)
-   # centeral
-   # [A1,B1,D1]
-   # [ 0,A1,B1]
-   # [ 0, 0,A1]
-   site2 = numpy.zeros((3*ng,3*ng,4,4))
-   site2[:ng,:ng] 	  = numpy.einsum('ab,mn->abmn',A1,idn)
-   site2[ng:2*ng,ng:2*ng] = numpy.einsum('ab,mn->abmn',A1,idn)
-   site2[2*ng:,2*ng:] 	  = numpy.einsum('ab,mn->abmn',A1,idn)
-   site2[:ng,ng:2*ng] 	  = numpy.einsum('ab,mn->abmn',B1,nii)
-   site2[ng:2*ng,2*ng:]   = numpy.einsum('ab,mn->abmn',B1,nii)
-   site2[:ng,2*ng:] 	  = numpy.einsum('ab,mn->abmn',D1,nud)
-   sites = [site0]+[site2]*(n-2)+[site1]
-   vpeps = class_peps(n,sites)
-   return vpeps
+   
+   # Shape:
+   #  (2,0) (2,1) (2,2)
+   #  (1,0) (1,1) (1,2)
+   #  (0,0) (0,1) (0,2) . . .
+   # Ordering: ludr
+   zpeps = numpy.empty((n,n), dtype=numpy.object)
+   # Interior
+   tmp = numpy.einsum('kl,ku,kd,kr->ludr',wka,wka,wka,wka)
+   for i in range(1,n-1):
+      for j in range(1,n-1):	   
+	 zpeps[i,j] = tmp.copy() 
+   # Corners 
+   tmp = numpy.einsum('k,ka,kb->ab',numpy.sqrt(wts),wka,wka)
+   zpeps[0,0]     = tmp.reshape((1,ng,1,ng))
+   zpeps[0,n-1]   = tmp.reshape((ng,ng,1,1))
+   zpeps[n-1,0]   = tmp.reshape((1,1,ng,ng))
+   zpeps[n-1,n-1] = tmp.reshape((ng,1,ng,1))
+   # Boundries
+   tmp = numpy.einsum('k,ka,kb,kc->abc',numpy.power(wts,0.25),wka,wka,wka)
+   for j in range(1,n-1):
+      zpeps[0,j]   = tmp.reshape((ng,ng,1,ng)) # bottom
+      zpeps[j,0]   = tmp.reshape((1,ng,ng,ng)) # left
+      zpeps[n-1,j] = tmp.reshape((ng,1,ng,ng)) # top
+      zpeps[j,n-1] = tmp.reshape((ng,ng,ng,1)) # right
+
+   # For simplicity, we assume measurement is always 
+   # taken for the interior points.
+   assert (pa[0]%(n-1))*(pa[1]%(n-1)) > 0
+   assert (pb[0]%(n-1))*(pb[1]%(n-1)) > 0
+   epeps = zpeps.copy()
+   if pa == pb:
+      tmp = numpy.einsum('k,kl,ku,kd,kr->ludr',xts**2,wka,wka,wka,wka)
+      epeps[pa] = tmp.copy() 
+   else:
+      tmp = numpy.einsum('k,kl,ku,kd,kr->ludr',xts,wka,wka,wka,wka)
+      epeps[pa] = tmp.copy() 
+      epeps[pb] = tmp.copy()
+
+   # Contract
+   cij = contraction2d.ratio(epeps,zpeps,auxbond=20)
+   return cij
+
 
 def test():
-   n = 4
-   t2d = exact2d.genT2d(n)
+   m = 4
+   n = 2*m+1
+   mass = 0.1
+   mass2 = mass**2
+   print '(m,n)=',(m,n),'mass=',mass
+   # Exact
+   t2d = exact2d.genT2d(n,mass)
    t2d = t2d.reshape((n*n,n*n))
-   print t2d
+   tinv = scipy.linalg.inv(t2d)
+   tinv = tinv.reshape((n,n,n,n))
+   vpot = tinv[m,m]
+   posj = range(1,n-1)
+   plt.plot(posj,vpot[posj,posj],'ro-',label='exact')
+   # Approximate
+   for ng in [2,4,6,8]:
+      print '\nng=',ng
+      vapp = []
+      for j in posj:
+         pb = (j,j)	   
+         cij = genVpeps(n,mass2=mass2,ng=ng,pa=(m,m),pb=pb)
+         print 'j=',j,'pb=',pb,'cij=',cij,'eij=',vpot[pb]
+         vapp.append(cij)
+      plt.plot(posj,vapp,'bo-',label='approx (ng='+str(ng)+')')
+   # Comparison
+   plt.legend()
+   plt.show()
    return 0
+
 
 if __name__ == '__main__':
    test()
