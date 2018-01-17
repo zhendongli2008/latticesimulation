@@ -1,14 +1,16 @@
 import numpy
 import mps
 
-def binarySearch(zpeps,auxbond,maxsteps=20,erange=30,iprt=1):
+#
+# Only caveat: assuming Z(1)>1.0, which is usually true?
+#
+def binarySearch(zpeps,auxbond,maxsteps=30,erange=30,iprt=1):
    shape = zpeps.shape
    pwr = -1.0/numpy.prod(shape) 
    if iprt>0: print '\n[binarySearch] shape=',shape,'auxbond=',auxbond
    a = 0.0
    # try scale from 1/|MaxVal|
    scale = 1.0/numpy.max(map(lambda x:numpy.max(x),zpeps.flatten()))
-   # *Assuming Z(1)>1.0, which is usually true? 
    b = max(2.0*scale,1.0)
    zpeps_try = zpeps*scale
    istep = 0
@@ -19,7 +21,8 @@ def binarySearch(zpeps,auxbond,maxsteps=20,erange=30,iprt=1):
          z = contract(zpeps_try,auxbond)
       except ValueError:
          pass	      
-      if iprt>0: print ' istep=',istep,'(a,b)=',(a,b),'scale=',scale,'z=',z
+      if iprt>0: print ' istep=',istep,'(a,b)=',(a,b),'width=',b-a,\
+		       'scale=',scale,'z=',z
       # Too large value of scale
       if z == None:
 	 b = scale
@@ -41,10 +44,20 @@ def binarySearch(zpeps,auxbond,maxsteps=20,erange=30,iprt=1):
   	 else: 
 	    sfac = numpy.power(z,pwr)
 	    scale = scale*sfac
-	    if iprt>0: print ' apply exact scale=',scale
+	    if scale > a and scale < b:
+	       if iprt>0: print ' apply ''exact'' scale=',scale
+	    else:
+	       # Reset to binary search
+	       scale = (a+b)/2.0
+      # Check convergence
       if istep == maxsteps: 
 	 print ' binarySearch exceeds maxsteps=',maxsteps
 	 exit(1)
+      if abs(b-a) < 1.e-20:
+	 print ' No good solution exists'
+	 scale = (a+b)/2.0
+	 z = 1.0
+	 break
       zpeps_try = zpeps*scale
    return scale,z
 
