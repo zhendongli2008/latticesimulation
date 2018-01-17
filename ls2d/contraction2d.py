@@ -4,7 +4,7 @@ import mps
 #
 # Only caveat: assuming Z(1)>1.0, which is usually true?
 #
-def binarySearch(zpeps,auxbond,maxsteps=30,erange=30,iprt=1):
+def binarySearch(zpeps,auxbond,maxsteps=40,erange=30,iprt=1):
    shape = zpeps.shape
    pwr = -1.0/numpy.prod(shape) 
    if iprt>0: print '\n[binarySearch] shape=',shape,'auxbond=',auxbond
@@ -21,7 +21,7 @@ def binarySearch(zpeps,auxbond,maxsteps=30,erange=30,iprt=1):
          z = contract(zpeps_try,auxbond)
       except ValueError:
          pass	      
-      if iprt>0: print ' istep=',istep,'(a,b)=',(a,b),'width=',b-a,\
+      if iprt>0: print ' i=%3d'%istep,'(a,b,w)= (%8.2e,%8.2e,%8.2e)'%(a,b,b-a),\
 		       'scale=',scale,'z=',z
       # Too large value of scale
       if z == None:
@@ -32,6 +32,9 @@ def binarySearch(zpeps,auxbond,maxsteps=30,erange=30,iprt=1):
 	 if abs(z-1.0)<1.e-10:
 	    if iprt>0: print ' converged scale=',scale,'z=',z
 	    break
+         if abs(b-a) < 1.e-10:
+ 	    if iprt==0: print ' No good solution exists',scale,'z=',z
+            break
 	 # Update interval
 	 if z > 1.0:
 	    b = scale
@@ -53,11 +56,6 @@ def binarySearch(zpeps,auxbond,maxsteps=30,erange=30,iprt=1):
       if istep == maxsteps: 
 	 print ' binarySearch exceeds maxsteps=',maxsteps
 	 exit(1)
-      if abs(b-a) < 1.e-20:
-	 print ' No good solution exists'
-	 scale = (a+b)/2.0
-	 z = 1.0
-	 break
       zpeps_try = zpeps*scale
    return scale,z
 
@@ -67,7 +65,6 @@ def ratio(epeps,zpeps,auxbond=None):
    epeps_try = epeps*scale
    v = contract(epeps_try,auxbond)
    print 'v,z,v/z=',v,z,v/z
-   exit()
    return v/z
 
 def contract(cpeps,auxbond=None):

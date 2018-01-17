@@ -66,7 +66,7 @@ def genVpeps(n,mass2=1.0,ng=3,pa=(1,1),pb=(1,2),iprt=0,auxbond=None):
       epeps[pb] = tmp.copy()
 
    # Contract
-   cij = contraction2d.ratio(epeps,zpeps,auxbond=20)
+   cij = contraction2d.ratio(epeps,zpeps,auxbond=30)
    return cij
 
 
