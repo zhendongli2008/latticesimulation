@@ -4,7 +4,7 @@ import contraction2d
 import matplotlib.pyplot as plt
 import exact2d
 
-def genVpeps(n,mass2=1.0,ng=3,pa=(1,1),pb=(1,2),iprt=0,auxbond=20):
+def genVpeps(n,mass2=1.0,ng=3,palst=None,pblst=None,iprt=0,auxbond=20):
    
    # Generation
    alpha = 2.0+mass2/2.0
@@ -53,24 +53,31 @@ def genVpeps(n,mass2=1.0,ng=3,pa=(1,1),pb=(1,2),iprt=0,auxbond=20):
 
    # For simplicity, we assume measurement is always 
    # taken for the interior points.
-   assert (pa[0]%(n-1))*(pa[1]%(n-1)) > 0
-   assert (pb[0]%(n-1))*(pb[1]%(n-1)) > 0
-   epeps = zpeps.copy()
-   if pa == pb:
-      tmp = numpy.einsum('k,kl,ku,kd,kr->ludr',xts**2,wka,wka,wka,wka)
-      epeps[pa] = tmp.copy() 
-   else:
-      tmp = numpy.einsum('k,kl,ku,kd,kr->ludr',xts,wka,wka,wka,wka)
-      epeps[pa] = tmp.copy() 
-      epeps[pb] = tmp.copy()
-
-   # Contract
-   cij = contraction2d.ratio(epeps,zpeps,auxbond)
-   return cij
+   scale,z = contraction2d.binarySearch(zpeps,auxbond)
+   na = len(palst)
+   nb = len(pblst) 
+   cab = numpy.zeros((na,nb))
+   for ia in range(na):
+      for ib in range(nb):
+  	 pa = palst[ia]
+	 pb = pblst[ib]
+         assert (pa[0]%(n-1))*(pa[1]%(n-1)) > 0
+         assert (pb[0]%(n-1))*(pb[1]%(n-1)) > 0
+         epeps = zpeps.copy()
+         if pa == pb:
+            tmp = numpy.einsum('k,kl,ku,kd,kr->ludr',xts**2,wka,wka,wka,wka)
+            epeps[pa] = tmp.copy() 
+         else:
+            tmp = numpy.einsum('k,kl,ku,kd,kr->ludr',xts,wka,wka,wka,wka)
+            epeps[pa] = tmp.copy() 
+            epeps[pb] = tmp.copy()
+         epeps = epeps*scale
+	 cab[ia,ib] = contraction2d.contract(epeps,auxbond)
+   return cab
 
 
 def test():
-   m = 4
+   m = 10
    n = 2*m+1
    mass = 0.1
    mass2 = mass**2
@@ -81,18 +88,14 @@ def test():
    tinv = scipy.linalg.inv(t2d)
    tinv = tinv.reshape((n,n,n,n))
    vpot = tinv[m,m]
-   posj = range(1,n-1)
+   posj = range(m,m+3)
    plt.plot(posj,vpot[posj,posj],'ro-',label='exact')
    # Approximate
-   for ng in [2,4,6,8]:
+   for ng in [2,3,4]:
       print '\nng=',ng
-      vapp = []
-      for j in posj:
-         pb = (j,j)	   
-         cij = genVpeps(n,mass2=mass2,ng=ng,pa=(m,m),pb=pb)
-         print 'j=',j,'pb=',pb,'cij=',cij,'eij=',vpot[pb]
-         vapp.append(cij)
-      plt.plot(posj,vapp,'bo-',label='approx (ng='+str(ng)+')')
+      vapp = genVpeps(n,mass2=mass2,ng=ng,palst=[(m,m)],pblst=[(m,m+i) for i in range(3)])
+      print vapp[0]
+      plt.plot(posj,vapp[0],'bo-',label='approx (ng='+str(ng)+')')
    # Comparison
    plt.legend()
    plt.show()

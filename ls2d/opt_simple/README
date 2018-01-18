@@ -1,0 +1,4 @@
+Note:
+   a good pratice to stablize the auto-grad optimization is to use small auxbond to optimize,
+   and then load the better guess and optimize with large auxbond.
+

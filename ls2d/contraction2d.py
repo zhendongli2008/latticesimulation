@@ -9,7 +9,7 @@ import mps
 #	       If this does not work, additional code needs to be applied
 #	       to search the initial boundary points - b.
 #
-def binarySearch(zpeps,auxbond,maxsteps=30,erange=30,iprt=1):
+def binarySearch(zpeps,auxbond,maxsteps=30,erange=30,iprt=0):
    shape = zpeps.shape
    pwr = -1.0/numpy.prod(shape) 
    if iprt>0: print '\n[binarySearch] shape=',shape,'auxbond=',auxbond
@@ -69,7 +69,7 @@ def ratio(epeps,zpeps,auxbond=None):
    scale,z = binarySearch(zpeps,auxbond)
    epeps_try = epeps*scale
    v = contract(epeps_try,auxbond)
-   print 'v,z,v/z=',v,z,v/z
+   #print 'v,z,v/z=',v,z,v/z
    return v/z
 
 def contract(cpeps,auxbond=None):
