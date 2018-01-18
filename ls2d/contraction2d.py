@@ -2,9 +2,14 @@ import numpy
 import mps
 
 #
-# Only caveat: assuming Z(1)>1.0, which is usually true?
+# Only caveat: Assuming Z(1)>1.0, which is usually true?
+# 
+# 	       In fact, NOT for high-T, but hopefully with initial
+# 	       scaling, Z(scale) fall into the region to apply exact scale.
+#	       If this does not work, additional code needs to be applied
+#	       to search the initial boundary points - b.
 #
-def binarySearch(zpeps,auxbond,maxsteps=40,erange=30,iprt=1):
+def binarySearch(zpeps,auxbond,maxsteps=30,erange=30,iprt=1):
    shape = zpeps.shape
    pwr = -1.0/numpy.prod(shape) 
    if iprt>0: print '\n[binarySearch] shape=',shape,'auxbond=',auxbond
@@ -21,19 +26,19 @@ def binarySearch(zpeps,auxbond,maxsteps=40,erange=30,iprt=1):
          z = contract(zpeps_try,auxbond)
       except ValueError:
          pass	      
-      if iprt>0: print ' i=%3d'%istep,'(a,b,w)= (%8.2e,%8.2e,%8.2e)'%(a,b,b-a),\
+      if iprt>0: print ' i= ',istep,'(a,b,w)=',(a,b,b-a),\
 		       'scale=',scale,'z=',z
       # Too large value of scale
       if z == None:
 	 b = scale
-	 scale = scale/2.0
+	 scale = (a+b)/2.0
       # Adjust scale to make z into the target region
       else:
 	 if abs(z-1.0)<1.e-10:
 	    if iprt>0: print ' converged scale=',scale,'z=',z
 	    break
          if abs(b-a) < 1.e-10:
- 	    if iprt==0: print ' No good solution exists',scale,'z=',z
+ 	    print ' No good solution exists',scale,'z=',z
             break
 	 # Update interval
 	 if z > 1.0:
@@ -48,14 +53,14 @@ def binarySearch(zpeps,auxbond,maxsteps=40,erange=30,iprt=1):
 	    sfac = numpy.power(z,pwr)
 	    scale = scale*sfac
 	    if scale > a and scale < b:
-	       if iprt>0: print ' apply ''exact'' scale=',scale
+	       if iprt>0: print ' apply "exact" scale=',scale
 	    else:
 	       # Reset to binary search
 	       scale = (a+b)/2.0
       # Check convergence
       if istep == maxsteps: 
 	 print ' binarySearch exceeds maxsteps=',maxsteps
-	 exit(1)
+	 break
       zpeps_try = zpeps*scale
    return scale,z
 

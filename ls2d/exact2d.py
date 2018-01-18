@@ -86,6 +86,8 @@ def curveplot(mass=0.01,k=2,m=30):
       return a*numpy.exp(-b*x)+c
    def f2(x,a,b,c):
       return a*scipy.special.k0(b*x)+c
+   def f2s(x,a,b):
+      return a*scipy.special.k0(b*x)
    def fit(d0,v0):
       diameter = m/2.0
       print '\nfit diameter=',diameter
@@ -102,6 +104,11 @@ def curveplot(mass=0.01,k=2,m=30):
       popt2 = scipy.optimize.curve_fit(f2,d0r,v0r,\
 		      		       p0=[1./(2.0*numpy.pi),mass,0.])[0]
       errs2 = numpy.abs(f2(d0r,*popt2)-v0r)
+      print ' errs2-bes',numpy.max(errs2)
+      print ' popt2-bes',popt2
+      popt2 = scipy.optimize.curve_fit(f2s,d0r,v0r,\
+		      		       p0=[1./(2.0*numpy.pi),mass])[0]
+      errs2 = numpy.abs(f2s(d0r,*popt2)-v0r)
       print ' errs2-bes',numpy.max(errs2)
       print ' popt2-bes',popt2
       return popt1,popt2,errs1,errs2,d0r,v0r
@@ -128,9 +135,9 @@ def curveplot(mass=0.01,k=2,m=30):
       #plt.plot(x,f1(x,*popt1a),'k-',label='fitted-exp')
       #plt.plot(x,f1(x,*popt1b),'k-',label='fitted-exp')
       #plt.plot(x,f1(x,*popt1c),'k-',label='fitted-exp')
-      plt.plot(x,f2(x,*popt2a),'b--',label='fitted-bes')
-      plt.plot(x,f2(x,*popt2b),'g--',label='fitted-bes')
-      plt.plot(x,f2(x,*popt2c),'r--',label='fitted-bes')
+      plt.plot(x,f2s(x,*popt2a),'b--',label='fitted-bes')
+      plt.plot(x,f2s(x,*popt2b),'g--',label='fitted-bes')
+      plt.plot(x,f2s(x,*popt2c),'r--',label='fitted-bes')
 
    plt.xlim([0,4*k])
    tm = numpy.max(tinv)
@@ -260,6 +267,6 @@ if __name__ == '__main__':
 # 2. compare different lambda?
    
    #fitCoulomb(k=10,m=30)
-   curveplot(mass=0.001,k=5,m=50)
+   curveplot(mass=0.05,k=10,m=50)
    #curveplot(mass=0.001,k=5,m=40)
 

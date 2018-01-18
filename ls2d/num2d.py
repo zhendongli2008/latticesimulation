@@ -4,7 +4,7 @@ import contraction2d
 import matplotlib.pyplot as plt
 import exact2d
 
-def genVpeps(n,mass2=1.0,ng=3,pa=(1,1),pb=(1,2),iprt=0,auxbond=None):
+def genVpeps(n,mass2=1.0,ng=3,pa=(1,1),pb=(1,2),iprt=0,auxbond=20):
    
    # Generation
    alpha = 2.0+mass2/2.0
@@ -23,7 +23,6 @@ def genVpeps(n,mass2=1.0,ng=3,pa=(1,1),pb=(1,2),iprt=0,auxbond=None):
          wij[i,j] = numpy.exp(xts[i]*xts[j])*\
 	 	    numpy.power(wts[i]*wts[j],0.25) # Absorb 1/4 for each bond(i,j)
    eig,v = scipy.linalg.eigh(wij)
-   print ' eig =',eig
    eig[numpy.argwhere(eig<0.0)] = 0.0
    wka = numpy.einsum('ik,k->ik',v,numpy.sqrt(eig))
    
@@ -66,7 +65,7 @@ def genVpeps(n,mass2=1.0,ng=3,pa=(1,1),pb=(1,2),iprt=0,auxbond=None):
       epeps[pb] = tmp.copy()
 
    # Contract
-   cij = contraction2d.ratio(epeps,zpeps,auxbond=30)
+   cij = contraction2d.ratio(epeps,zpeps,auxbond)
    return cij
 
 

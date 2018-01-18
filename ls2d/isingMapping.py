@@ -3,13 +3,13 @@ import num2d
 mass2c = -1.730814685786978
 
 def test():
-   m = 40 #100
+   m = 50 #100
    n = 2*m+1
    # Exact
    # ss_tc = [0.63662]
    # Approximate
    ng = 2
-   mass2 = mass2c #6 #mass2c
+   mass2 = mass2c #mass2c #6 #mass2c
    beta = 1.0/(4.0+mass2)
    vapp = []
    print '(m,n)=',(m,n),'mass2=',mass2,'beta=',beta,'T=',1.0/beta
