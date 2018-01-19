@@ -48,7 +48,7 @@ def test_min():
        pepsa = peps.create((nr,nc),pdim,configa)
        pepsb = peps.create((nr,nc),pdim,configb)
        peps0 = peps.add(pepsa,pepsb) # this has bond=2
-       pepsc = peps.random(peps0.shape, pdim, 1, 0.1) 
+       pepsc = peps.random(peps0.shape, pdim, 1, 0.01) 
        peps0 = peps.add(peps0, pepsc)
        peps0 = peps.add_noise(peps0,pdim,bond,fac=0.1)
        vec = peps.flatten(peps0)
@@ -102,11 +102,15 @@ def test_min():
         return nvec
 
     # optimize
+    step = 1.0
+    for i in range(3):
+       g = deriv(vec)
+       print 'i=',i,np.linalg.norm(g)
+       vec = vec - step*g
+
     print '\nStart optimization...'
-    for i in range(2):
-       result = scipy.optimize.minimize(bound_energy_fn, jac=deriv, x0=vec,\
-			                options={'maxiter':10})
-       vec = save_vec(vec)
+    result = scipy.optimize.minimize(bound_energy_fn, jac=deriv, x0=vec,\
+			             options={'maxiter':10},callback=save_vec)
     
     P0 = peps.aspeps(result.x, (nr,nc), pdim, bond)
     print "final eav =",bound_energy_fn(peps.flatten(P0))/(nr*nc)
