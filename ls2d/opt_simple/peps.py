@@ -1,3 +1,6 @@
+#
+# Convention: pludr
+#
 import mps
 import mpo
 import autograd
@@ -19,11 +22,11 @@ def zeros(shape,pdim,bond):
             peps[i,j] = np.zeros_like(peps[i,j])
     return peps
 
-def random(shape,pdim,bond):
+def random(shape,pdim,bond,fac=0.1):
     peps = empty(shape,pdim,bond)
     for i in range(peps.shape[0]):
-        for j in range(peps.shape[1]):
-            peps[i,j] = np.random.random(peps[i,j].shape)
+       for j in range(peps.shape[1]):
+          peps[i,j] = np.random.uniform(0.,1.,peps[i,j].shape)*fac
     return peps
     
 def empty(shape,pdim,bond):
@@ -86,7 +89,7 @@ def add(pepsa,pepsb):
     
 def add_noise(peps,pdim,bond,fac=1.0):
     vec = flatten(peps)
-    vec = vec + fac*np.random.uniform(-1,1,vec.shape)
+    vec = vec + fac*np.random.uniform(0.,1.,vec.shape)
     peps_new = aspeps(vec,peps.shape,pdim,bond)
     return peps_new
 

@@ -14,7 +14,9 @@ DONE - 2.5 Mapping to Ising model?
 
  4. Fitting?
 
- 5. Real simulation of 2D spin systems?
+ 5. Real simulation of 2D spin systems? => Initial guess may be a problem!
+    # 4-by-4 HM: -0.5743254416 per site (J)
+    # 4-by-4 LR: -0.4245769621 per site (J)
 
 ----------------------------------------------------------------------
 
