@@ -164,7 +164,7 @@ def curveplot(mass=0.01,k=2,m=30):
 def fitCoulomb(k=5,m=10):
    nk = 2*k+1
    n = 2*m+1
-   mlst = [0.004096,0.01024,0.0256,0.064,0.16,0.4,1.,2.5,6.25,15.625,39.0625,97.6563,244.141]
+   mlst = numpy.array([0.004096,0.01024,0.0256,0.064,0.16,0.4,1.,2.5,6.25,15.625,39.0625,97.6563,244.141])
    terms = len(mlst)
    coeff = numpy.zeros((terms,n,n))
    tc = numpy.zeros((terms,n,n))
@@ -194,10 +194,23 @@ def fitCoulomb(k=5,m=10):
    coeff = numpy.vstack(map(lambda x:coeff[x[0],x[1]],fmm))
    # RHS
    vxy = 1.0/dxy
-   wt = numpy.ones(vxy.shape)
-   bvec = coeff.T.dot(wt*vxy)
-   amat = coeff.T.dot(numpy.einsum('i,ij->ij',wt,coeff))
-   clst = numpy.linalg.solve(amat,bvec)
+   
+   # Start fitting
+   bvec = vxy
+   amat = coeff
+   qa,ra,pa = scipy.linalg.qr(amat,pivoting=True)
+   print 'amat.shape=',amat.shape
+   print 'pa=',pa
+   nselect = 9
+   for nterm in range(1,terms+1):
+      cols = pa[:nterm]
+      clst = scipy.linalg.pinv(amat[:,cols]).dot(bvec)
+      errs = abs(amat[:,cols].dot(clst)-bvec)
+      print
+      print 'nterm=',nterm,' err_max=',numpy.max(errs),'err_norm=',numpy.linalg.norm(errs)
+      print ' dropped mass=',mlst[pa[nterm:]]
+      if nterm == nselect: break
+   
    plt.plot(clst/abs(clst)*numpy.log10(abs(clst)),'ro-')
    plt.savefig('data/clst.pdf')
    plt.show()
@@ -205,10 +218,10 @@ def fitCoulomb(k=5,m=10):
    tc2 = numpy.zeros((n,n))
    tv2 = numpy.zeros((n,n))
    td2 = numpy.zeros((n,n))
-   for i,mass in enumerate(mlst):
-      tc2 += tc[i]*clst[i]
-      tv2 += tv[i]*clst[i]
-      td2 += td[i]*clst[i]
+   for i in range(len(clst)):
+      tc2 += tc[cols[i]]*clst[i]
+      tv2 += tv[cols[i]]*clst[i]
+      td2 += td[cols[i]]*clst[i]
 
    def genPairs(rdist,tinv,n,i,j):
       dist = distance(n,i,j)
@@ -229,10 +242,14 @@ def fitCoulomb(k=5,m=10):
    d1,v1 = genPairs(diameter,tv2,n,m,m+k)
    d2,v2 = genPairs(diameter,td2,n,m+k,m+k)
    # Error
-   print 'Summary of fitting:'
+   print '\nSummary of fitting:'
    print 'nk=',nk
    print 'n=',n
    print 'terms=',terms
+   print 'droped terms=',mlst[pa[nselect:]]
+   print 'final terms=',len(cols)
+   print 'final mass=',mlst[cols]
+   print 'final coef=',clst
    print 'npoint=',len(fmm)
    print 'fit_radial=',fit_radial # around the center
    print 'diameter=',diameter
@@ -266,7 +283,7 @@ if __name__ == '__main__':
 # 1. compare different lattice size - shift measure center (i,j) to boundary 
 # 2. compare different lambda?
    
-   #fitCoulomb(k=10,m=30)
-   curveplot(mass=0.05,k=10,m=50)
+   fitCoulomb(k=10,m=40)
+   #curveplot(mass=0.05,k=10,m=50)
    #curveplot(mass=0.001,k=5,m=40)
 

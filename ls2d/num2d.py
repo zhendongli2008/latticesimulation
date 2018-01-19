@@ -4,15 +4,14 @@ import contraction2d
 import matplotlib.pyplot as plt
 import exact2d
 
-def genVpeps(n,mass2=1.0,ng=3,palst=None,pblst=None,iprt=0,auxbond=20):
-   
+def initialization(n,mass2=1.0,ng=2,iprt=0,auxbond=20):
    # Generation
    alpha = 2.0+mass2/2.0
    xts,wts = numpy.polynomial.hermite.hermgauss(ng)
    xts = xts/numpy.sqrt(alpha)
    wts = wts/numpy.sqrt(alpha)
    if iprt>0:
-      print '\n[genVpeps]'
+      print '\n[initialization]'
       print ' alpha =',alpha
       print ' xts =',xts
       print ' wts =',wts
@@ -25,7 +24,7 @@ def genVpeps(n,mass2=1.0,ng=3,palst=None,pblst=None,iprt=0,auxbond=20):
    eig,v = scipy.linalg.eigh(wij)
    eig[numpy.argwhere(eig<0.0)] = 0.0
    wka = numpy.einsum('ik,k->ik',v,numpy.sqrt(eig))
-   
+   # Construct Z=tr(T) 
    # Shape:
    #  (2,0) (2,1) (2,2)
    #  (1,0) (1,1) (1,2)
@@ -50,10 +49,17 @@ def genVpeps(n,mass2=1.0,ng=3,palst=None,pblst=None,iprt=0,auxbond=20):
       zpeps[j,0]   = tmp.reshape((1,ng,ng,ng)) # left
       zpeps[n-1,j] = tmp.reshape((ng,1,ng,ng)) # top
       zpeps[j,n-1] = tmp.reshape((ng,ng,ng,1)) # right
-
+   # Compute scaling factor
+   scale,z = contraction2d.binarySearch(zpeps,auxbond,iprt=iprt)
    # For simplicity, we assume measurement is always 
    # taken for the interior points.
-   scale,z = contraction2d.binarySearch(zpeps,auxbond)
+   local1 = scale*numpy.einsum('k,kl,ku,kd,kr->ludr',xts,wka,wka,wka,wka)
+   local2 = scale*numpy.einsum('k,kl,ku,kd,kr->ludr',xts**2,wka,wka,wka,wka)
+   zpeps = scale*zpeps
+   return zpeps,local1,local2
+
+def correlationFunctions(n,mass2=1.0,ng=3,palst=None,pblst=None,iprt=0,auxbond=20):
+   zpeps,local1,local2 = initialization(n,mass2,ng,iprt,auxbond)
    na = len(palst)
    nb = len(pblst) 
    cab = numpy.zeros((na,nb))
@@ -65,17 +71,14 @@ def genVpeps(n,mass2=1.0,ng=3,palst=None,pblst=None,iprt=0,auxbond=20):
          assert (pb[0]%(n-1))*(pb[1]%(n-1)) > 0
          epeps = zpeps.copy()
          if pa == pb:
-            tmp = numpy.einsum('k,kl,ku,kd,kr->ludr',xts**2,wka,wka,wka,wka)
-            epeps[pa] = tmp.copy() 
+            epeps[pa] = local2.copy() 
          else:
-            tmp = numpy.einsum('k,kl,ku,kd,kr->ludr',xts,wka,wka,wka,wka)
-            epeps[pa] = tmp.copy() 
-            epeps[pb] = tmp.copy()
-         epeps = epeps*scale
+            epeps[pa] = local1.copy() 
+            epeps[pb] = local1.copy()
 	 cab[ia,ib] = contraction2d.contract(epeps,auxbond)
    return cab
 
-
+# Test
 def test():
    m = 10
    n = 2*m+1
@@ -93,7 +96,8 @@ def test():
    # Approximate
    for ng in [2,3,4]:
       print '\nng=',ng
-      vapp = genVpeps(n,mass2=mass2,ng=ng,palst=[(m,m)],pblst=[(m,m+i) for i in range(3)])
+      vapp = correlationFunctions(n,mass2=mass2,ng=ng,\
+		      		  palst=[(m,m)],pblst=[(m,m+i) for i in range(3)])
       print vapp[0]
       plt.plot(posj,vapp[0],'bo-',label='approx (ng='+str(ng)+')')
    # Comparison

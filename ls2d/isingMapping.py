@@ -32,7 +32,9 @@ def test():
    mass2 = mass2c #mass2c #6 #mass2c
    beta = 1.0/(4.0+mass2)
    print '(m,n)=',(m,n),'mass2=',mass2,'beta=',beta,'T=',1.0/beta
-   cij = num2d.genVpeps(n,mass2=mass2,ng=ng,palst=[(m,m)],pblst=[(m+j,m+j) for j in range(3)])
+   cij = num2d.correlationFunctions(n,mass2=mass2,ng=ng,\
+		   		    palst=[(m,m)],pblst=[(m+j,m+j) for j in range(3)],\
+				    iprt=1)
    print 'j=',j,'cij=',cij,'cij/beta=',cij/beta
    return 0
 

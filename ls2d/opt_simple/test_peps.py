@@ -9,7 +9,7 @@ def test_min():
     nr = 4
     nc = 4
     pdim = 2
-    bond = 3
+    bond = 2
     auxbond = 4
     # interface to autograd
     def energy_fn(vec, pdim,bond):
@@ -39,7 +39,7 @@ def test_min():
     pepsc = peps.random(pepsa.shape, pdim, bond-2) 
     peps0 = peps.add(pepsa,pepsb) # this has bond=2
     peps0 = peps.add(peps0, pepsc)
-    peps0 = peps.add_noise(peps0,pdim,bond,fac=1.e-2)
+    peps0 = peps.add_noise(peps0,pdim,bond,fac=1.e-1)
     vec = peps.flatten(peps0)
 
     # test
@@ -59,20 +59,20 @@ def test_min():
 	print
         return 0
 
-    ifload = False #True
+    ifload = False 
     if ifload:
        print 'load guess...'
        vec = np.load('peps_vec1.npy')
        energy = bound_energy_fn(vec)/(nr*nc)
-       peps0 = peps.aspeps(vec, (nr,nc), pdim, 2)
+       peps0 = peps.aspeps(vec, (nr,nc), pdim, bond)
        PP = peps.dot(peps0,peps0,auxbond)
        vec = vec*np.power(PP,-0.5/(nr*nc))
        energy = bound_energy_fn(vec)/(nr*nc)
-       # Increase
-       pepsc = peps.zeros(peps0.shape, pdim, bond-2) 
-       peps0 = peps.add(peps0, pepsc)
-       peps0 = peps.add_noise(peps0,pdim,bond,fac=1.e-1)
-       vec = peps.flatten(peps0)
+       ## Increase
+       #pepsc = peps.zeros(peps0.shape, pdim, bond-2) 
+       #peps0 = peps.add(peps0, pepsc)
+       #peps0 = peps.add_noise(peps0,pdim,bond,fac=1.e-1)
+       #vec = peps.flatten(peps0)
        print 'eav =',energy
 
     # optimize
