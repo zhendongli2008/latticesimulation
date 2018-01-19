@@ -8,9 +8,9 @@ size = comm.size
 rank = comm.rank
 
 ng = 2
-n = 11
-center = (5,5)
-mass2lst = 1.0*numpy.arange(0,50,2)
+n = 15
+center = (n/2,n/2)
+mass2lst = genFit.genMass2lst(mass2c,50,20)
 mass2rank = [mass2lst[i] for i in range(len(mass2lst)) if i%size == rank]
 
 # mpirun -n 4 python genData.py

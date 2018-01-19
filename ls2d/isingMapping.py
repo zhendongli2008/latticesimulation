@@ -23,13 +23,13 @@ mass2c = -1.730814685786978
 # vapp= [0.63248103930453647]
 
 def test():
-   m = 50 #100 #100
+   m = 30 #100 #100
    n = 2*m+1
    # Exact
    # ss_tc = [0.63662]
    # Approximate
    ng = 2
-   mass2 = mass2c #mass2c #6 #mass2c
+   mass2 = 6 #mass2c #mass2c #6 #mass2c
    beta = 1.0/(4.0+mass2)
    print '(m,n)=',(m,n),'mass2=',mass2,'beta=',beta,'T=',1.0/beta
    cij = num2d.correlationFunctions(n,mass2=mass2,ng=ng,\
