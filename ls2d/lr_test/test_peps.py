@@ -11,10 +11,10 @@ def test_min():
     nc = 4
     pdim = 2
     bond = 3
-    auxbond = 6
+    auxbond = bond**2
 
     # interface to autograd:
-    def energy1(vec):
+    def energy1(vec, bond):
         P = peps.aspeps(vec, (nr,nc), pdim, bond)
         PHP = peps_hlr.eval_heish(P, P, auxbond)
         PP = peps.dot(P,P,auxbond)
@@ -29,10 +29,10 @@ def test_min():
        dfun = autograd.grad(fun)
        return dfun(0.0)
 
-    bound_energy_fn = energy1
+    bound_energy_fn = lambda x: energy1(x,bond)
     deriv = autograd.grad(bound_energy_fn)
 
-    ifload = True #False 
+    ifload = False 
     if not ifload:
 
        # Initialization
@@ -48,9 +48,9 @@ def test_min():
        pepsa = peps.create((nr,nc),pdim,configa)
        pepsb = peps.create((nr,nc),pdim,configb)
        peps0 = peps.add(pepsa,pepsb) # this has bond=2
-       #pepsc = peps.random(peps0.shape, pdim, 1, 1.0) 
-       #peps0 = peps.add(peps0, pepsc)
-       peps0 = peps.add_noise(peps0,pdim,bond,fac=0.01)
+       pepsc = peps.random(peps0.shape, pdim, 1, 0.1) 
+       peps0 = peps.add(peps0, pepsc)
+       peps0 = peps.add_noise(peps0,pdim,bond,fac=0.1)
        vec = peps.flatten(peps0)
 
        # test
@@ -72,13 +72,20 @@ def test_min():
        if bond>D0:
           peps_v = peps.aspeps(vec, (nr,nc), pdim, D0) 
 	  peps_c = peps.random(peps_v.shape, pdim, bond-D0, 1.0)
-          peps_t = peps.add(peps_v, peps_c)
+	  peps_t = peps.add(peps_v, peps_c)
+	  peps_t = peps.add_noise(peps_t,pdim,bond,fac=0.1)
+	  PP = peps.dot(peps_t,peps_t,auxbond)
+          vec = peps.flatten(peps_t)*np.power(PP,-0.5/(nr*nc))
 	  print '<v|v>=',peps.dot(peps_v,peps_v,auxbond)
 	  print '<v|c>=',peps.dot(peps_v,peps_c,auxbond)
 	  print '<c|c>=',peps.dot(peps_c,peps_c,auxbond)
 	  print '<t|t>=',peps.dot(peps_t,peps_t,auxbond)
-          PP = peps.dot(peps_t,peps_t,auxbond)
-          vec = peps.flatten(peps_t)*np.power(PP,-0.5/(nr*nc))
+	  print '<t|v>=',peps.dot(peps_t,peps_v,auxbond)
+	  print '<t|c>=',peps.dot(peps_t,peps_c,auxbond)
+	  print 'e_v=',energy1(peps.flatten(peps_v),2) 
+	  print 'e_c=',energy1(peps.flatten(peps_c),1)
+	  print 'e_t=',energy1(peps.flatten(peps_t),3)
+
        energy = bound_energy_fn(vec)/(nr*nc)
        print 'PP =',PP,' eav =',energy
 
@@ -96,14 +103,9 @@ def test_min():
 
     # optimize
     print '\nStart optimization...'
-    method = 'BFGS' #'L-BFGS-B'
-    for i in range(3):
-       print 'i=',i,np.linalg.norm(deriv(vec))
-       vec = vec - 0.1*deriv(vec)
-
-    for i in range(5):
+    for i in range(2):
        result = scipy.optimize.minimize(bound_energy_fn, jac=deriv, x0=vec,\
-			                method=method,options={'maxiter':2})
+			                options={'maxiter':10})
        vec = save_vec(vec)
     
     P0 = peps.aspeps(result.x, (nr,nc), pdim, bond)

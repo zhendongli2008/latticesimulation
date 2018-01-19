@@ -26,7 +26,7 @@ def random(shape,pdim,bond,fac=0.1):
     peps = empty(shape,pdim,bond)
     for i in range(peps.shape[0]):
        for j in range(peps.shape[1]):
-          peps[i,j] = np.random.uniform(0.,1.,peps[i,j].shape)*fac
+          peps[i,j] = np.random.uniform(-1.,1.,peps[i,j].shape)*fac
     return peps
     
 def empty(shape,pdim,bond):
@@ -83,13 +83,33 @@ def add(pepsa,pepsb):
     pepsc = zeros(shape,pdim,bonda+bondb)
     for i in range(shape[0]):
         for j in range(shape[1]):
-            pepsc[i,j][:,:bonda,:bonda,:bonda,:bonda]=pepsa[i,j][:,:,:,:,:]
-            pepsc[i,j][:,bonda:,bonda:,bonda:,bonda:]=pepsb[i,j][:,:,:,:,:]
+            n,la,ua,da,ra = pepsa[i,j].shape
+            n,lc,uc,dc,rc = pepsc[i,j].shape
+            pepsc[i,j][:,:la,:ua,:da,:ra] = pepsa[i,j]
+            # pepsb
+            l1,l2 = la,lc
+            u1,u2 = ua,uc
+            d1,d2 = da,dc
+            r1,r2 = ra,rc
+            # Boundary case
+            if i == 0: 	          # first row 
+               assert da == dc == 1
+               d1,d2 = 0,1
+            elif i == shape[0]-1: # last row
+               assert ua == uc == 1
+               u1,u2 = 0,1
+            if j == 0: 	 	  # first col
+               assert la == lc == 1
+               l1,l2 = 0,1
+            if j == shape[1]-1:   # last col
+               assert ra == rc == 1
+               r1,r2 = 0,1
+            pepsc[i,j][:,l1:l2,u1:u2,d1:d2,r1:r2] = pepsb[i,j]
     return pepsc
     
 def add_noise(peps,pdim,bond,fac=1.0):
     vec = flatten(peps)
-    vec = vec + fac*np.random.uniform(0.,1.,vec.shape)
+    vec = vec + fac*np.random.uniform(-1.,1.,vec.shape)
     peps_new = aspeps(vec,peps.shape,pdim,bond)
     return peps_new
 
