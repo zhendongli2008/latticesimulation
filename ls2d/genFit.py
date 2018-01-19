@@ -8,12 +8,12 @@ import time
 import matplotlib.pyplot as plt
 
 def getFname(info):
-   ng,n,center,masst = info
-   fname = 'data/cij_ng'+str(ng)+'_n'+str(n)+'_center'+str(center)+'_masst'+str(masst)+'.h5'
+   dirname,ng,n,center,masst = info
+   fname = dirname+'/cij_ng'+str(ng)+'_n'+str(n)+'_center'+str(center)+'_masst'+str(masst)+'.h5'
    return fname
 
 def saveData(info,cij):
-   ng,n,center,masst = info
+   dirname,ng,n,center,masst = info
    fname = getFname(info)
    print '[saveData] fname=',fname 
    f = h5py.File(fname,'w')
@@ -40,8 +40,8 @@ def loadData(fname):
    return info,cij
 
 def genData(info):
-   ng,n,center,masst = info
-   print '\n[genData] ng,n,center,masst=',(ng,n,center,masst)
+   dirname,ng,n,center,masst = info
+   print '\n[genData] dir,ng,n,center,masst=',(dirname,ng,n,center,masst)
    palst = [center]
    pblst = [(i,j) for i in range(1,n-1) for j in range(1,n-1)]
    t0 = time.time()
@@ -60,7 +60,7 @@ def genFit():
 
 if __name__ == '__main__':
    from isingMapping import mass2c
-   info = [2,11,(5,5),mass2c]
+   info = ['data',2,11,(5,5),mass2c]
    genData(info)
    fname = getFname(info)
    info,cij = loadData(fname)
