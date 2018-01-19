@@ -53,37 +53,62 @@ def loadData(fname):
 def genData(info):
    dirname,ng,n,center,masst = info
    print '\n[genData] dir,ng,n,center,masst=',(dirname,ng,n,center,masst)
+   assert center[0] == center[1] == n/2
    palst = [center]
-   pblst = [(i,j) for i in range(1,n-1) for j in range(1,n-1)]
+   pblst = [(i,j) for i in range(1,n/2+1) for j in range(1,n/2+1)]
    t0 = time.time()
    cij = num2d.correlationFunctions(n,mass2=masst,ng=ng,\
 		   		    palst=palst,pblst=pblst,\
 				    iprt=1)
+   cij_full = numpy.zeros((n,n))
+   idx = 0 
+   for i in range(1,n/2+1):
+      for j in range(1,n/2+1):
+	 cij_full[i,j] = cij[0][idx] # left-up 
+	 cij_full[i,n-j-1] = cij[0][idx] # right-up
+	 cij_full[n-i-1,j] = cij[0][idx] # left-down
+	 cij_full[n-i-1,n-j-1] = cij[0][idx] # right-down
+	 idx += 1 
+   #plt.matshow(cij_full)
+   #plt.show()
    t1 = time.time()
    print ' total time = ',t1-t0
-   cij = cij[0].reshape(n-2,n-2)
-   saveData(info,cij)
+   saveData(info,cij_full)
    return 0
 
 def checkData(info,iop=0):
-   dirname,ng,nn,center,mlst = info
-   rpos = [i-nn/2 for i in range(1,nn-1)]
+   dirname,ng,n,center,mlst = info
+   rpos = [i-n/2 for i in range(1,n-1)]
    for i,mass in enumerate(mlst):
-      fname = getFname(['tmp',ng,nn,center,mass])
+      fname = getFname(['tmp',ng,n,center,mass])
       cij = loadData(fname)[1]
       if iop == 1: cij=cij*(4.0+mass)
-      plt.plot(rpos,cij[center[0]-1],'o-') # since cij(n-2,n-2) 
+      plt.plot(rpos,cij[center[0]][1:n-1],'o-') 
    plt.show()
    return 0
 
-def fitCoulomb(info,k=5,nselect=10):
-   dirname,ng,nn,center,mlst = info
-   m = nn/2
-   n = nn-2
+def distance(n,i,j):
+   darray = numpy.zeros((n,n))
+   for a in range(n):
+      for b in range(n):
+         darray[a,b] = numpy.sqrt((1.0*a-i)**2+(1.0*b-j)**2)
+   return darray
+
+def neighbor(n,i,j):
+   narray = []
+   for a in range(n):
+      for b in range(n):
+	 if (a != i or b != j):
+            narray.append((a,b))
+   return narray
+
+def fitCoulomb(info,k=None,nselect=10):
+   dirname,ng,n,center,mlst = info
+   m = center[0]
    terms = len(mlst)
    coeff = numpy.zeros((terms,n,n))
    for i,mass in enumerate(mlst):
-      fname = getFname(['tmp',ng,nn,center,mass])
+      fname = getFname(['tmp',ng,n,center,mass])
       coeff[i] = loadData(fname)[1]
    coeff = coeff.reshape(terms,n,n)
    coeff = coeff.transpose(1,2,0) # (n,n,terms)
@@ -92,7 +117,7 @@ def fitCoulomb(info,k=5,nselect=10):
    # Fitting can use a much larger region than physical region
    fmm = exact2d.neighbor(n,m,m)
    dxy = numpy.array(map(lambda x:dist[x],fmm))
-   fit_radial = m #/2.0
+   fit_radial = min(m-1,m/1.5)
    c = map(lambda x:x[0],numpy.argwhere(dxy<=fit_radial))
    dxy = numpy.array([dxy[i] for i in c])
    fmm = numpy.array([fmm[i] for i in c])
@@ -135,7 +160,8 @@ def fitCoulomb(info,k=5,nselect=10):
    vci = numpy.zeros((n,n))
    for i in range(len(clst_final)):
       vci += coeff[indx_final[i]]*clst_final[i]
-   diameter = 2*k*numpy.sqrt(2)
+   if k == None: k = int(m/2.0)
+   diameter = 2.0*k*numpy.sqrt(2)
    d0,v0 = genPairs(diameter,vci,n,m,m)
    
    # Error

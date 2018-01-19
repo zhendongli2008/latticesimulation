@@ -8,7 +8,7 @@ size = comm.size
 rank = comm.rank
 
 ng = 2
-n = 15
+n = 11
 center = (n/2,n/2)
 mass2lst = genFit.genMass2lst(mass2c,50,20)
 mass2rank = [mass2lst[i] for i in range(len(mass2lst)) if i%size == rank]
