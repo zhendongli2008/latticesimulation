@@ -76,13 +76,18 @@ def genData(info):
    saveData(info,cij_full)
    return 0
 
-def checkData(info,iop=0):
+# Check the data
+def checkData(info,iop=0,thresh=1.0):
    dirname,ng,n,center,mlst = info
    rpos = [i-n/2 for i in range(1,n-1)]
    for i,mass in enumerate(mlst):
-      fname = getFname(['tmp',ng,n,center,mass])
+      fname = getFname([dirname,ng,n,center,mass])
       cij = loadData(fname)[1]
       if iop == 1: cij=cij*(4.0+mass)
+      print 'i=',i,'mass=',mass,'|vmax|=',numpy.max(cij)
+      if numpy.max(cij) > thresh: 
+	 print 'skipped i=',i
+	 continue
       plt.plot(rpos,cij[center[0]][1:n-1],'o-') 
    plt.show()
    return 0
@@ -102,13 +107,14 @@ def neighbor(n,i,j):
             narray.append((a,b))
    return narray
 
-def fitCoulomb(info,k=None,nselect=10):
+def fitCoulomb(info,k=None,nselect=10,ifplot=False,skiplst=[]):
    dirname,ng,n,center,mlst = info
    m = center[0]
    terms = len(mlst)
    coeff = numpy.zeros((terms,n,n))
    for i,mass in enumerate(mlst):
-      fname = getFname(['tmp',ng,n,center,mass])
+      fname = getFname([dirname,ng,n,center,mass])
+      if i in skiplst: continue
       coeff[i] = loadData(fname)[1]
    coeff = coeff.reshape(terms,n,n)
    coeff = coeff.transpose(1,2,0) # (n,n,terms)
@@ -128,17 +134,19 @@ def fitCoulomb(info,k=None,nselect=10):
    qa,ra,pa = scipy.linalg.qr(amat,pivoting=True)
    print 'amat.shape=',amat.shape
    print 'pa=',pa
-   for nterm in range(terms,1,-1):
+   print 'Rd=',numpy.diag(ra)
+   for nterm in range(terms,0,-1):
       cols = pa[:nterm]
       clst = scipy.linalg.pinv(amat[:,cols]).dot(bvec)
       errs = abs(amat[:,cols].dot(clst)-bvec)
       print 'nterm=',nterm,' err_max=',numpy.max(errs),\
-		           ' err_norm=',numpy.linalg.norm(errs),\
+		           ' err_av=',numpy.mean(abs(errs)),\
 			   ' |c|_max=',numpy.max(abs(clst))
       # Save
       if nterm == 0 or nterm == nselect:
          clst_final = clst.copy()
          indx_final = pa[:nterm]
+	 mlst_final = numpy.array(mlst)[indx_final]
       if nterm == nselect: break
 
    # Select data within a radial=rdist
@@ -169,7 +177,7 @@ def fitCoulomb(info,k=None,nselect=10):
    print 'n=',n
    print 'final terms=',len(cols)
    print 'indx_final =',indx_final
-   print 'mlst_final =',numpy.array(mlst)[indx_final]
+   print 'mlst_final =',mlst_final
    print 'clst_final =',clst_final
    print '---details of fitting---'
    print 'terms=',terms
@@ -178,17 +186,29 @@ def fitCoulomb(info,k=None,nselect=10):
    print 'check_diameter=',diameter
    print 'nk=',2*k+1
    print '|err|max=',numpy.max(abs(v0-1.0/d0))
-   print '|err|nrm=',numpy.linalg.norm(v0-1.0/d0)
+   print '|err|nrm=',numpy.mean(abs(v0-1.0/d0))
    # Plot results
-   x = numpy.linspace(1.e-8,50,1000)
-   plt.plot(x,1/x,'k-',label='1/r')
-   plt.plot(dxy,bvec,'ko',label='1/rij',markersize=8)
-   plt.plot(d0,v0,'ro-',label='Vc (n='+str(n)+')',markersize=8)
-   plt.xlim([0,1.2*diameter])
-   plt.ylim([-0.1,1.5])
-   plt.legend()
-   plt.show()
-   return indx_final,clst_final
+   if ifplot:
+      x = numpy.linspace(1.e-8,50,1000)
+      plt.plot(x,1/x,'k-',label='1/r')
+      plt.plot(dxy,bvec,'ko',label='1/rij',markersize=8)
+      plt.plot(d0,v0,'ro-',label='Vc (n='+str(n)+')',markersize=8)
+      plt.xlim([0,1.2*diameter])
+      plt.ylim([-0.1,1.5])
+      plt.legend()
+      plt.show()
+      # Error
+      plt.semilogy(d0,abs(v0-1.0/d0),'ro-',label='Vc (n='+str(n)+')',markersize=8)
+      plt.xlim([0,1.2*diameter])
+      plt.legend()
+      plt.show()
+   # Save
+   f = h5py.File(dirname+'/fitCoulomb.h5','w')
+   f['indx_final'] = indx_final
+   f['mlst_final'] = mlst_final
+   f['clst_final'] = clst_final
+   f.close()
+   return indx_final,mlst_final,clst_final
 
 if __name__ == '__main__':
    info = ['data',2,11,(5,5),mass2c]
