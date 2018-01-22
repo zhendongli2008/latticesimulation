@@ -29,19 +29,30 @@ else:
    nf = 4
    abond = 20
    ifsavePEPO = False #True
-   if ifsavePEPO: 
+   if ifsavePEPO:
       for k in range(len(indx)):
          coeff = clst[k]
          mass2 = mlst[k]
          print 'k=',k,'coeff=',coeff
-         npepo = genPEPO.genNPEPO(n,mass2,ng,iprt=1,auxbond=abond,iop=1,nij=None)
+         npepo = genPEPO.genNPEPO(n,mass2,ng,iprt=1,auxbond=abond,iop=1,\
+			 	  nij=None)
          fname = dirname+'/pepo_'+str(k)+'.h5'
          ioPEPO.savePEPO(fname,npepo,iprt=1)
-   else:
-      for k in range(len(indx)):
-         fname = dirname+'/pepo_'+str(k)+'.h5'
-	 pepo = ioPEPO.loadPEPO(fname,iprt=1)
-         spepo = genPEPOsmall.genBPEPO(pepo,L,nf,auxbond=abond)
-         exit()
+         spepo = genPEPOsmall.genBPEPO(npepo,L,nf,auxbond=abond)
 	 fname = dirname+'/spepo_'+str(k)+'.h5'
          ioPEPO.savePEPO(fname,spepo,iprt=1)
+   else:
+      # Test
+      for k in range(len(indx)):
+         fname = dirname+'/pepo_'+str(k)+'.h5'
+         npepo = ioPEPO.loadPEPO(fname,iprt=1)
+	 spepo = genPEPOsmall.genBPEPO(npepo,L,nf,auxbond=abond)
+	 fname = dirname+'/spepo_'+str(k)+'.h5'
+         ioPEPO.savePEPO(fname,spepo,iprt=1)
+         #fname = dirname+'/spepo_'+str(k)+'.h5'
+	 #spepo = ioPEPO.loadPEPO(fname,iprt=1)
+	 print 'k=',k,'spepo.shape=',spepo.shape
+	 for i in range(spepo.shape[0]):
+	    for j in range(spepo.shape[1]):
+	       print 'i,j=',(i,j),spepo[i,j].shape
+         exit()
