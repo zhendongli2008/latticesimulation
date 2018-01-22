@@ -9,7 +9,7 @@ import mps
 #	       If this does not work, additional code needs to be applied
 #	       to search the initial boundary points - b.
 #
-def binarySearch(zpeps,auxbond,maxsteps=30,erange=30,iprt=0):
+def binarySearch(zpeps,auxbond,maxsteps=50,erange=30,iprt=0):
    shape = zpeps.shape
    pwr = -1.0/numpy.prod(shape) 
    if iprt>0: print '\n[binarySearch] shape=',shape,'auxbond=',auxbond
@@ -62,6 +62,8 @@ def binarySearch(zpeps,auxbond,maxsteps=30,erange=30,iprt=0):
 	 print ' binarySearch exceeds maxsteps=',maxsteps
 	 break
       zpeps_try = zpeps*scale
+   # Final step
+   scale = scale*numpy.power(z,pwr)
    return scale,z
 
 # Brute for calculations
