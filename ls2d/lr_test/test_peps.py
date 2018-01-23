@@ -25,7 +25,7 @@ def test_min():
     # dlog<P|1+tH+t^2+...|P>/dt|(t=0) = Energy
     def energy2(vec, bond):
        P = peps.aspeps(vec, (nr,nc), pdim, bond)
-       PHP = spepo_hlr.eval_heish(P, P, auxbond)
+       PHP = spepo_hlr.eval_heish(P, P)
        PP = peps.dot(P,P,auxbond)
        e = PHP/PP
        print ' PHP,PP,PHP/PP,eav=',PHP,PP,e,e/(nr*nc)
@@ -58,12 +58,12 @@ def test_min():
        # test
        print 'energy2=',energy2(vec, bond)
        print 'energy1=',energy1(vec, bond)
+       exit()
        print 'nparams=',len(vec)
        print 'test energy' 
        print bound_energy_fn(vec)
        print 'test grad' 
        d = deriv(vec)
-       exit()
 
     else:
 
