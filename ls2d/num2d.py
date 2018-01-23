@@ -12,6 +12,7 @@ def initialization(n,mass2=1.0,ng=2,iprt=0,auxbond=20):
    wts = wts/numpy.sqrt(alpha)
    if iprt>0:
       print '\n[initialization]'
+      print ' mass2 =',mass2
       print ' alpha =',alpha
       print ' xts =',xts
       print ' wts =',wts

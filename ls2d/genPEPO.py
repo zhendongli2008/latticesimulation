@@ -15,20 +15,22 @@ import contraction2d
 #
 # Only the use of [0] can kill the second configuration!
 #
-def genNPEPO(n=6,mass2=1.0,ng=2,iprt=0,auxbond=20,iop=1,nij=None):
+def genNPEPO(n=6,mass2=1.0,ng=2,iprt=0,auxbond=20,iop=1,\
+	     nij=[],psites=[]):
+   print '\n[genPEPO.genNPEPO] n=',n,' psites=',psites
    zpeps,local1,local2 = num2d.initialization(n,mass2,ng,iprt,auxbond)
    idn = numpy.array([[1.,0.],[0.,1.]])
-   if nij == None:
+   if len(nij) == 0:
       ni = numpy.array([[0.,0.],[0.,1.]])
       nj = numpy.array([[0.,0.],[0.,1.]])
    else:
       ni,nj = nij
-   nr,nc = zpeps.shape
-   npepo = numpy.empty((nr,nc),dtype=numpy.object)
+   if len(psites) == 0: psites = range(n)
+   npepo = numpy.empty((n,n),dtype=numpy.object)
    np = 2
    nb = 4
-   for i in range(nr):
-      for j in range(nc):
+   for i in range(n):
+      for j in range(n):
 	 # 2 - 7 - 3
 	 # |   |   |
 	 # 5 - 8 - 6
@@ -36,39 +38,43 @@ def genNPEPO(n=6,mass2=1.0,ng=2,iprt=0,auxbond=20,iop=1,nij=None):
 	 # 0 - 4 - 1
 	 l,u,d,r = zpeps[i,j].shape
 	 tensor0 = numpy.einsum('pq,ludr->pqludr',idn,zpeps[i,j])
-	 
 	 # 1. Determine the shapes
 	 # Corners: 
 	 if i==0 and j==0:
             tmp = numpy.zeros((1,nb,1,nb,np,np,l,u,d,r))
-	 elif i==0 and j==nc-1:
+	 elif i==0 and j==n-1:
             tmp = numpy.zeros((nb,nb,1,1,np,np,l,u,d,r))
-  	 elif i==nr-1 and j==0:
+  	 elif i==n-1 and j==0:
             tmp = numpy.zeros((1,1,nb,nb,np,np,l,u,d,r))
-	 elif i==nr-1 and j==nc-1:
+	 elif i==n-1 and j==n-1:
             tmp = numpy.zeros((nb,1,nb,1,np,np,l,u,d,r))
 	    tmp[0,0,1,0] = tensor0.copy()
 	 # Edges:
-	 elif i==0 and (j>0 and j<nc-1):
+	 elif i==0 and (j>0 and j<n-1):
             tmp = numpy.zeros((nb,nb,1,nb,np,np,l,u,d,r))
- 	 elif (i>0 and i<nr-1) and j==0:
+ 	 elif (i>0 and i<n-1) and j==0:
             tmp = numpy.zeros((1,nb,nb,nb,np,np,l,u,d,r))
-	 elif (i>0 and i<nr-1) and j==nc-1:
+	 elif (i>0 and i<n-1) and j==n-1:
             tmp = numpy.zeros((nb,nb,nb,1,np,np,l,u,d,r))
 	    tmp[1,1,0,0] = tensor0.copy()
 	    tmp[0,1,1,0] = tensor0.copy()
-         elif i==nr-1 and (j>0 and j<nc-1):
+         elif i==n-1 and (j>0 and j<n-1):
             tmp = numpy.zeros((nb,1,nb,nb,np,np,l,u,d,r))
 	    tmp[0,0,1,0] = tensor0.copy()
 	 # Interior
-	 elif (i>0 and i<nr-1) and (j>0 and j<nc-1):
+	 elif (i>0 and i<n-1) and (j>0 and j<n-1):
             tmp = numpy.zeros((nb,nb,nb,nb,np,np,l,u,d,r))
 	 # 2. Determine values
-	 if i != nr-1 or j != nc-1: tmp[0,0,0,0] = tensor0.copy()
+	 if i != n-1 or j != n-1: tmp[0,0,0,0] = tensor0.copy()
 	 # For simplicity, we assume boundary do not have physical operators! 
-	 if (i>0 and i<nr-1) and (j>0 and j<nc-1):
-	    tensor1i = numpy.einsum('pq,ludr->pqludr',ni,local1)
-	    tensor1j = numpy.einsum('pq,ludr->pqludr',nj,local1)
+	 if (i>0 and i<n-1) and (j>0 and j<n-1):
+	    # Only i,j in psites
+	    if i in psites and j in psites: 
+	       tensor1i = numpy.einsum('pq,ludr->pqludr',ni,local1)
+	       tensor1j = numpy.einsum('pq,ludr->pqludr',nj,local1)
+            else:
+	       tensor1i = numpy.zeros_like(tensor0)
+	       tensor1j = numpy.zeros_like(tensor0)
 	    # Case-4: right
 	    tmp[0,1,0,2] = tensor1i.copy() 
 	    tmp[2,1,0,2] = tensor0.copy()
@@ -128,6 +134,7 @@ def pepo2cpeps(npepo,palst,pblst,auxbond=20):
 	 vac[pb] = 1
 	 cab[ia,ib] = ceval(npepo,vac,vac,auxbond)
    return cab
+
 
 if __name__ == '__main__':
    ng = 2

@@ -3,14 +3,21 @@ import mps
 import contraction2d
 import copy
 
+def genPSites(ntot,Lphys,nf):
+   Ltot = Lphys + nf*(Lphys-1)
+   nl = (ntot-Ltot)/2 
+   nr = ntot-nl-Ltot # >= nl
+   psites = [nl+i*(nf+1) for i in range(Lphys)]
+   return psites
+
 def genBPEPO(pepo,Lphys,nf,auxbond=20):
-   print '[genPEPOsmall.genBPEPO] shape=',pepo.shape,'(Lphys,nf)=',(Lphys,nf),\
-	 'auxbond=',auxbond
+   print '\n[genPEPOsmall.genBPEPO] auxbond=',auxbond
    ntot = pepo.shape[0]
    Ltot = Lphys + nf*(Lphys-1) 
    dist = nf+1
    nl = (ntot-Ltot)/2 
    nr = ntot-nl-Ltot # >= nl
+   print ' ntot=',pepo.shape[0],'(Lphys,nf)=',(Lphys,nf)
    print ' Ltot=',Ltot,' dist=',dist,' nl=',nl,' nr=',nr,' ratio=',float(ntot)/Ltot
    # Bottom MPS
    bmps = [None]*ntot
@@ -90,17 +97,21 @@ def genBPEPO(pepo,Lphys,nf,auxbond=20):
    # Left 
    for i in range(Ltot+2):
       d,r,u = lmps[i].shape
-      spepo[i,0] = numpy.reshape(lmps[i],(1,d,r,u)).transpose(0,3,1,2) # ldru->ludr
+      l = 1
+      tmp = numpy.reshape(lmps[i],(l,d,r,u)).transpose(0,3,1,2) # ldru->ludr
+      spepo[i,0] = tmp.reshape((1,1,l,u,d,r))
    # Right
    for i in range(Ltot+2):
       d,l,u = rmps[i].shape
-      spepo[i,Ltot+1] = numpy.reshape(rmps[i],(d,l,u,1)).transpose(1,2,0,3) # dlur->ludr
+      r = 1
+      tmp = numpy.reshape(rmps[i],(d,l,u,r)).transpose(1,2,0,3) # dlur->ludr
+      spepo[i,Ltot+1] = tmp.reshape((1,1,l,u,d,r))
    # Bottom
    for j in range(Ltot):
-      spepo[0,j+1] = tpepo[0,j+nl][0,0].copy() 
+      spepo[0,j+1] = tpepo[0,j+nl].copy() 
    # Up
    for j in range(Ltot):
-      spepo[Ltot+1,j+1] = tpepo[Ltot+1,j+nl][0,0].copy()
+      spepo[Ltot+1,j+1] = tpepo[Ltot+1,j+nl].copy()
    return spepo
 
 
@@ -109,21 +120,20 @@ if __name__ == '__main__':
    import contraction2d
    import genPEPO 
    ng = 2
-   n = 41 
+   n = 31 
    center = (n/2,n/2)
    mass2 = mass2c
-   Lphys = 5
-   nf = 3
+   Lphys = 4
+   nf = 0
    abond = 20 # Note that npepo seems to be more accurate !!!
    Ltot = Lphys + nf*(Lphys-1) 
   
-   pa0 = (Ltot/2,Ltot/2) # on spepo
-   pb0 = (Ltot/2+1,Ltot/2+1)
+   pa0 = (1,1) #Ltot/2,Ltot/2) # on spepo
+   pb0 = (2,2) #Ltot/2+1,Ltot/2+1)
    def address(pos):
       nl = (n-Ltot)/2 
       ii = pos[0] + nl - 1 # -1 due to the additional boundary 
       jj = pos[1] + nl - 1
-      print (ii,jj)
       return (ii,jj) 
 
    # NPEPO 
@@ -135,12 +145,7 @@ if __name__ == '__main__':
    epeps = numpy.empty(spepo.shape,dtype=numpy.object)
    nn = spepo.shape[0]
    for i in range(nn):
-      epeps[i,0] = spepo[i,0]
-      epeps[0,i] = spepo[0,i]
-      epeps[nn-1,i] = spepo[nn-1,i]
-      epeps[i,nn-1] = spepo[i,nn-1]
-   for i in range(1,nn-1):
-      for j in range(1,nn-1):
+      for j in range(nn):
          epeps[i,j] = spepo[i,j][0,0]
    cab = contraction2d.contract(epeps,auxbond=abond)
    print
@@ -149,12 +154,7 @@ if __name__ == '__main__':
    epeps = numpy.empty(spepo.shape,dtype=numpy.object)
    nn = spepo.shape[0]
    for i in range(nn):
-      epeps[i,0] = spepo[i,0]
-      epeps[0,i] = spepo[0,i]
-      epeps[nn-1,i] = spepo[nn-1,i]
-      epeps[i,nn-1] = spepo[i,nn-1]
-   for i in range(1,nn-1):
-      for j in range(1,nn-1):
+      for j in range(nn):
          epeps[i,j] = spepo[i,j][0,0]
    epeps[pa0] = spepo[pa0][1,1]
    epeps[pb0] = spepo[pb0][1,1]

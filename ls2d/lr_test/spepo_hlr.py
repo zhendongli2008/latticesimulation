@@ -52,17 +52,9 @@ def evalContraction(spepo,pepsa,pepsb,auxbond):
     Ltot = L+nf*(L-1)
     assert Ltot+2 == epeps0.shape[0]
     psites = [1+i*(nf+1) for i in range(L)]
-    # Unaffected boundary parts
-    for i in range(Ltot+2):
-       epeps0[0,i] = spepo[0,i]
-       epeps0[i,0] = spepo[i,0]
-       epeps0[Ltot+1,i] = spepo[Ltot+1,i]
-       epeps0[i,Ltot+1] = spepo[i,Ltot+1]
     # Unaffected interior parts
-    for ii in range(1,Ltot+1):
-       if ii in psites: continue
-       for jj in range(1,Ltot+1):
-          if jj in psites: continue
+    for ii in range(Ltot+2):
+       for jj in range(Ltot+2):
           epeps0[ii,jj] = spepo[ii,jj][0,0]
     # Action on physical sites
     for i in range(L):
@@ -98,9 +90,6 @@ def evalContraction(spepo,pepsa,pepsb,auxbond):
 	  tmp1 = einsum('ludr,LUDR->lLuUdDrR',tmp1,it)
 	  s = tmp1.shape
 	  epeps0[ii,jj] = np.reshape(tmp1,(s[0]*s[1],s[2]*s[3],s[4]*s[5],s[6]*s[7]))
-    #># Contract 
-    #>for ii in range(Ltot+2):
-    #>   for jj in range(Ltot+2):
-    #>      print ii,jj,epeps0[ii,jj].shape
+    # Contract 
     val = peps.contract_cpeps(epeps0, auxbond)
     return val
