@@ -75,7 +75,7 @@ def ratio(epeps,zpeps,auxbond=None):
    return v/z
 
 def contract(cpeps,auxbond=None):
-   n = cpeps.shape[0]
+   m,n = cpeps.shape
    cmps0 = [None]*n
    # Bottom MPS
    for i in range(n):
@@ -83,7 +83,7 @@ def contract(cpeps,auxbond=None):
       assert d == 1
       cmps0[i] = numpy.reshape(cpeps[0,i], (l,u*d,r))
    # Contract
-   for i in range(1,n):
+   for i in range(1,m):
       cmpo = [None]*n
       for j in range(n):
          cmpo[j] = cpeps[i,j]
