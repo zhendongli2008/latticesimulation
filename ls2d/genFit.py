@@ -196,11 +196,22 @@ def fitCoulomb(info,k=None,nselect=10,ifplot=False,skiplst=[]):
       plt.xlim([0,1.2*diameter])
       plt.ylim([-0.1,1.5])
       plt.legend()
+      plt.savefig('fitCoulombVpot.pdf')
       plt.show()
       # Error
       plt.semilogy(d0,abs(v0-1.0/d0),'ro-',label='Vc (n='+str(n)+')',markersize=8)
       plt.xlim([0,1.2*diameter])
       plt.legend()
+      plt.savefig('fitCoulombErrs.pdf')
+      plt.show()
+      # Clst
+      order = numpy.argsort(mlst_final)
+      clstPlot = clst_final/abs(clst_final)*numpy.log10(abs(clst_final))
+      clstPlot = clstPlot[order]
+      plt.plot(clstPlot,'ro-')
+      plt.xlabel('index')
+      plt.ylabel('sgn(c)*log10|c|')
+      plt.savefig('fitCoulombClst.pdf')
       plt.show()
    # Save
    f = h5py.File(dirname+'/fitCoulomb.h5','w')
