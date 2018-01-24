@@ -16,7 +16,7 @@ import contraction2d
 # Only the use of [0] can kill the second configuration!
 #
 def genNPEPO(n=6,mass2=1.0,ng=2,iprt=0,auxbond=20,iop=1,\
-	     nij=[],psites=[]):
+	     nij=[],psites=[],fac=None):
    print '\n[genPEPO.genNPEPO] n=',n,' psites=',psites
    zpeps,local1,local2 = num2d.initialization(n,mass2,ng,iprt,auxbond)
    idn = numpy.array([[1.,0.],[0.,1.]])
@@ -109,6 +109,13 @@ def genNPEPO(n=6,mass2=1.0,ng=2,iprt=0,auxbond=20,iop=1,\
  	 tmp = tmp.transpose(4,5,0,6,1,7,2,8,3,9) # wxyzpqludr->pq,wl,xu,yd,zr
 	 s = tmp.shape
 	 npepo[i,j] = tmp.reshape(s[0],s[1],s[2]*s[3],s[4]*s[5],s[6]*s[7],s[8]*s[9]).copy()
+   if fac != None:
+      scale = numpy.power(abs(fac),1.0/(n*n))
+      print ' fac=',fac,' scale=',scale
+      for i in range(n):
+         for j in range(n):
+	    npepo[i,j] = scale*npepo[i,j]
+      if fac<0.0: npepo[0,0] = -npepo[0,0]
    return npepo
 
 def ceval(npepo,conf1,conf2,auxbond=20):

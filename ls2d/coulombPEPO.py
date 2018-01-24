@@ -6,6 +6,7 @@ import ioPEPO
 import genPEPOsmall
 import contraction2d
 from isingMapping import mass2c
+import time
 
 dirname = 'tmp2'
 ng = 2
@@ -29,35 +30,36 @@ else:
    print 'clst=',clst
 
 import numpy as np
-Id = np.array([[1.,1.],[0., 1.]])
-Ni = np.array([[0.,0.],[0., 1.]])
 Sz = np.array([[1.,0.],[0.,-1.]])*0.5
 Sm = np.array([[0.,1.],[0., 0.]])
 Sp = Sm.T
 
-ifdebug = False
+ifdebug = True
 if ifdebug:
-   nindx = 1
-   Pairs = [[Ni,Ni]]
+   Pairs = [[]]
+   nindx = len(indx)
 else:
    Pairs = [[Sz,Sz],[Sp,Sm],[Sm,Sp]]
    nindx = len(indx)
 nc = len(Pairs)
 
-n = 21
+n = 51
 L = 4
-nf = 0
-abond = 20
+nf = 1
+dist = nf+1.0
+abond = 25
 psites = genPEPOsmall.genPSites(n,L,nf)
+pa0 = (1,1)
+pb0 = (1,5)
 
 if ifsave:
-   for ic in range(nc):
-      for k in range(nindx):
+   for k in range(nindx):
+      for ic in range(nc):
          coeff = clst[k]
          mass2 = mlst[k]
          print 'k=',k,'coeff=',coeff,'mass2=',mass2
          npepo = genPEPO.genNPEPO(n,mass2,ng,iprt=1,auxbond=abond,iop=1,\
-              	 	          nij=Pairs[ic],psites=psites)
+              	 	          nij=Pairs[ic],psites=psites,fac=coeff)
          fname = dirname+'/pepo_nf'+str(nf)+'_ic'+str(ic)+'_k'+str(k)+'.h5'
          ioPEPO.savePEPO(fname,npepo,iprt=1)
          spepo = genPEPOsmall.genBPEPO(npepo,L,nf,auxbond=abond)
@@ -65,14 +67,13 @@ if ifsave:
          ioPEPO.savePEPO(fname,spepo,iprt=1)
 else:
 
+   clst[:] = 1.0 # for the new convesion
    Ltot = L + nf*(L-1) 
    def address(pos):
       nl = (n-Ltot)/2 
       ii = pos[0] + nl - 1 # -1 due to the additional boundary 
       jj = pos[1] + nl - 1
       return (ii,jj) 
-   pa0 = (1,1)
-   pb0 = (2,2)
    pa = address(pa0)
    pb = address(pb0)
    print 'pa=',pa
@@ -82,10 +83,10 @@ else:
    k = 0
    fname = dirname+'/pepo_nf'+str(nf)+'_ic'+str(ic)+'_k'+str(k)+'.h5'
    npepo = ioPEPO.loadPEPO(fname,iprt=1)
-   print 'npepo.shape=',npepo.shape
+   #print 'npepo.shape=',npepo.shape
    fname = dirname+'/spepo_nf'+str(nf)+'_ic'+str(ic)+'_k'+str(k)+'.h5'
    spepo = ioPEPO.loadPEPO(fname,iprt=1)
-   print 'spepo.shape=',spepo.shape
+   #print 'spepo.shape=',spepo.shape
 
    # TEST-1
    epeps = numpy.empty(spepo.shape,dtype=numpy.object)
@@ -127,3 +128,39 @@ else:
    cab = contraction2d.contract(epeps,auxbond=abond)
    print 'TEST2(npepo)-cab=',cab,'benchmark=',\
          genPEPO.pepo2cpeps(npepo,[pa],[pb],auxbond=abond)[0,0]
+  
+   val1 = 0.
+   val2 = 0. 
+   for k in range(nindx):
+      for ic in range(nc):
+         fname = dirname+'/pepo_nf'+str(nf)+'_ic'+str(ic)+'_k'+str(k)+'.h5'
+         npepo = ioPEPO.loadPEPO(fname,iprt=0)
+         #print 'npepo.shape=',npepo.shape
+         fname = dirname+'/spepo_nf'+str(nf)+'_ic'+str(ic)+'_k'+str(k)+'.h5'
+         spepo = ioPEPO.loadPEPO(fname,iprt=0)
+         #print 'spepo.shape=',spepo.shape
+
+         t0 = time.time()
+	 epeps = numpy.empty(spepo.shape,dtype=numpy.object)
+         nn = spepo.shape[0]
+         for i in range(nn):
+            for j in range(nn):
+               epeps[i,j] = spepo[i,j][0,0]
+         epeps[pa0] = spepo[pa0][1,1]
+         epeps[pb0] = spepo[pb0][1,1]
+         cab1 = contraction2d.contract(epeps,auxbond=abond)
+         val1 += cab1*clst[k] 
+         t1 = time.time()
+         print 'k=',k,clst[k],'TEST2-cab=',cab1,'v=',val1*dist,'t=',t1-t0
+         # Test-2
+         epeps = numpy.empty(npepo.shape,dtype=numpy.object)
+         nn = npepo.shape[0]
+         for i in range(nn):
+            for j in range(nn):
+               epeps[i,j] = npepo[i,j][0,0]
+         epeps[pa] = npepo[pa][1,1]
+         epeps[pb] = npepo[pb][1,1]
+         cab2 = contraction2d.contract(epeps,auxbond=abond)
+         val2 += cab2*clst[k] 
+         t2 = time.time()
+         print 'k=',k,clst[k],'TEST2-cab=',cab2,'v=',val2*dist,'t=',t2-t1

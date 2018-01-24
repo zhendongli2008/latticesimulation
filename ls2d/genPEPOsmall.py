@@ -11,7 +11,8 @@ def genPSites(ntot,Lphys,nf):
    return psites
 
 def genBPEPO(pepo,Lphys,nf,auxbond=20):
-   print '\n[genPEPOsmall.genBPEPO] auxbond=',auxbond
+   auxbond_hor = int(1.5*auxbond)
+   print '\n[genPEPOsmall.genBPEPO] auxbond=',auxbond,' auxbond_hor=',auxbond_hor
    ntot = pepo.shape[0]
    Ltot = Lphys + nf*(Lphys-1) 
    dist = nf+1
@@ -72,7 +73,7 @@ def genBPEPO(pepo,Lphys,nf,auxbond=20):
          cmpo[i] = tpepo[i,j][0,0].transpose(2,3,0,1) # ludr->drlu
       lmps = contraction2d.mpo_mapply(cmpo,lmps)
       if auxbond is not None: # compress
-         lmps = mps.compress(lmps,auxbond)
+         lmps = mps.compress(lmps,auxbond_hor)
    # Right MPS
    rmps = [None]*(Ltot+2)
    for i in range(Ltot+2):
@@ -85,7 +86,7 @@ def genBPEPO(pepo,Lphys,nf,auxbond=20):
          cmpo[j] = tpepo[j,ntot-i-1][0,0].transpose(2,0,3,1) # ludr->dlru
       rmps = contraction2d.mpo_mapply(cmpo,rmps)
       if auxbond is not None: # compress
-         rmps = mps.compress(rmps,auxbond)
+         rmps = mps.compress(rmps,auxbond_hor)
    #
    # Assemble SPEPO
    #
