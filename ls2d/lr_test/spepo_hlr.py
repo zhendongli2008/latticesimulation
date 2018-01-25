@@ -1,13 +1,14 @@
 import autograd
-import autograd.numpy as np
+import numpy as np
+#import autograd.numpy as np
 from latticesimulation.ls2d.opt_simple import peps
 import h5py
 import time
 einsum=autograd.numpy.einsum
 
-dirname = '../tmp2'
+dirname = '../tmp2_4by4'
 nf = 0
-abond = 20
+abond = 40
 
 def loadPEPO(fname,iprt=0):
    if iprt>0: print '[spepo_hlr.loadPEPO] fname=',fname
@@ -20,7 +21,7 @@ def loadPEPO(fname,iprt=0):
    f.close()
    return pepo
 
-def eval_heish(pepsa, pepsb, auxbond=abond):
+def eval_heish(pepsa, pepsb, iop):
    # Load
    f = h5py.File(dirname+'/fitCoulomb.h5','r')
    indx = f['indx_final'].value 
@@ -33,17 +34,22 @@ def eval_heish(pepsa, pepsb, auxbond=abond):
    L = nr
    val = 0.
    fac = [1.0,0.5,0.5]
-   for ic in range(3):
-    for k in range(len(indx)):
-      t0 = time.time()
-      fname = dirname+'/spepo_nf'+str(nf)+'_ic'+str(ic)+'_k'+str(k)+'.h5'
-      spepo = loadPEPO(fname,iprt=1)
-      t1 = time.time()
-      tmp = evalContraction(spepo,pepsa,pepsb,auxbond) 
-      t2 = time.time()
-      print 'ic,k=',(ic,k),'clst=',clst[k],'fac=',fac[ic],'val=',tmp
-      print 'time for loading =',t1-t0,' evaluation =',t2-t1
-      val += clst[k]*fac[ic]*tmp
+   if iop != 3:
+      iclst = [iop]
+   else:
+      iclst = [0,1,2]
+   for k in range(len(indx)):
+      for ic in iclst:
+         t0 = time.time()
+         fname = dirname+'/spepo_nf'+str(nf)+'_ic'+str(ic)+'_k'+str(k)+'.h5'
+         spepo = loadPEPO(fname,iprt=1)
+         t1 = time.time()
+         tmp = evalContraction(spepo,pepsa,pepsb,abond) 
+         t2 = time.time()
+         val += clst[k]*fac[ic]*tmp
+         print 
+	 print 'ic,k=',(ic,k),'clst=',clst[k],'fac=',fac[ic],'tmp=',tmp,'val=',val
+         print 'time for loading =',t1-t0,' evaluation =',t2-t1
    return val
 
 def evalContraction(spepo,pepsa,pepsb,auxbond):

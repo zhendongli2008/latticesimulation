@@ -8,7 +8,7 @@ import contraction2d
 from isingMapping import mass2c
 import time
 
-dirname = 'tmp2'
+dirname = 'tmp2_4by4'
 ng = 2
 n = 101
 center = (n/2,n/2)
@@ -16,9 +16,9 @@ mass2lst = genFit.genMass2lst(mass2c,50,28)
 
 info = [dirname,ng,n,center,mass2lst]
 
-ifsave = False #True
+ifsave = True
 if ifsave: 
-   indx,mlst,clst = genFit.fitCoulomb(info,k=10,nselect=15,ifplot=False)
+   indx,mlst,clst = genFit.fitCoulomb(info,k=10,nselect=10,ifplot=False)
 else:
    f = h5py.File(dirname+'/fitCoulomb.h5','r')
    indx = f['indx_final'].value 
@@ -34,7 +34,7 @@ Sz = np.array([[1.,0.],[0.,-1.]])*0.5
 Sm = np.array([[0.,1.],[0., 0.]])
 Sp = Sm.T
 
-ifdebug = True
+ifdebug = False #True
 if ifdebug:
    Pairs = [[]]
    nindx = len(indx)
@@ -45,12 +45,12 @@ nc = len(Pairs)
 
 n = 51
 L = 4
-nf = 1
+nf = 0
 dist = nf+1.0
-abond = 25
+abond = 20
 psites = genPEPOsmall.genPSites(n,L,nf)
 pa0 = (1,1)
-pb0 = (1,5)
+pb0 = (1,2)
 
 if ifsave:
    for k in range(nindx):
@@ -59,7 +59,7 @@ if ifsave:
          mass2 = mlst[k]
          print 'k=',k,'coeff=',coeff,'mass2=',mass2
          npepo = genPEPO.genNPEPO(n,mass2,ng,iprt=1,auxbond=abond,iop=1,\
-              	 	          nij=Pairs[ic],psites=psites,fac=coeff)
+              	 	          nij=Pairs[ic],psites=psites)
          fname = dirname+'/pepo_nf'+str(nf)+'_ic'+str(ic)+'_k'+str(k)+'.h5'
          ioPEPO.savePEPO(fname,npepo,iprt=1)
          spepo = genPEPOsmall.genBPEPO(npepo,L,nf,auxbond=abond)
@@ -67,7 +67,7 @@ if ifsave:
          ioPEPO.savePEPO(fname,spepo,iprt=1)
 else:
 
-   clst[:] = 1.0 # for the new convesion
+   fac = [1.0,0.5,0.5]
    Ltot = L + nf*(L-1) 
    def address(pos):
       nl = (n-Ltot)/2 
@@ -131,8 +131,8 @@ else:
   
    val1 = 0.
    val2 = 0. 
-   for k in range(nindx):
-      for ic in range(nc):
+   for ic in range(nc):
+      for k in range(nindx):
          fname = dirname+'/pepo_nf'+str(nf)+'_ic'+str(ic)+'_k'+str(k)+'.h5'
          npepo = ioPEPO.loadPEPO(fname,iprt=0)
          #print 'npepo.shape=',npepo.shape
@@ -149,9 +149,9 @@ else:
          epeps[pa0] = spepo[pa0][1,1]
          epeps[pb0] = spepo[pb0][1,1]
          cab1 = contraction2d.contract(epeps,auxbond=abond)
-         val1 += cab1*clst[k] 
+         val1 += cab1*clst[k]*fac[ic] 
          t1 = time.time()
-         print 'k=',k,clst[k],'TEST2-cab=',cab1,'v=',val1*dist,'t=',t1-t0
+         print 'ic=',ic,'k=',k,clst[k],'TEST2-cab=',cab1,'v=',val1*dist,'t=',t1-t0
          # Test-2
          epeps = numpy.empty(npepo.shape,dtype=numpy.object)
          nn = npepo.shape[0]
@@ -161,6 +161,6 @@ else:
          epeps[pa] = npepo[pa][1,1]
          epeps[pb] = npepo[pb][1,1]
          cab2 = contraction2d.contract(epeps,auxbond=abond)
-         val2 += cab2*clst[k] 
+         val2 += cab2*clst[k]*fac[ic]
          t2 = time.time()
-         print 'k=',k,clst[k],'TEST2-cab=',cab2,'v=',val2*dist,'t=',t2-t1
+         print 'ic=',ic,'k=',k,clst[k],'TEST2-cab=',cab2,'v=',val2*dist,'t=',t2-t1

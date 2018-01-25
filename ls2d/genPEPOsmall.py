@@ -11,7 +11,7 @@ def genPSites(ntot,Lphys,nf):
    return psites
 
 def genBPEPO(pepo,Lphys,nf,auxbond=20):
-   auxbond_hor = int(1.5*auxbond)
+   auxbond_hor = auxbond
    print '\n[genPEPOsmall.genBPEPO] auxbond=',auxbond,' auxbond_hor=',auxbond_hor
    ntot = pepo.shape[0]
    Ltot = Lphys + nf*(Lphys-1) 
