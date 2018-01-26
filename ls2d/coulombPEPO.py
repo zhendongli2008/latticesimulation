@@ -8,7 +8,7 @@ import contraction2d
 from isingMapping import mass2c
 import time
 
-dirname = 'tmp2_4by4'
+dirname = 'tmp2_4by4nf4'
 ng = 2
 n = 101
 center = (n/2,n/2)
@@ -16,9 +16,9 @@ mass2lst = genFit.genMass2lst(mass2c,50,28)
 
 info = [dirname,ng,n,center,mass2lst]
 
-ifsave = True
+ifsave = False #True
 if ifsave: 
-   indx,mlst,clst = genFit.fitCoulomb(info,k=10,nselect=10,ifplot=False)
+   indx,mlst,clst = genFit.fitCoulomb(info,k=10,nselect=2,ifplot=False)
 else:
    f = h5py.File(dirname+'/fitCoulomb.h5','r')
    indx = f['indx_final'].value 
@@ -43,9 +43,9 @@ else:
    nindx = len(indx)
 nc = len(Pairs)
 
-n = 51
+n = 81
 L = 4
-nf = 0
+nf = 4
 dist = nf+1.0
 abond = 20
 psites = genPEPOsmall.genPSites(n,L,nf)
@@ -63,7 +63,8 @@ if ifsave:
          fname = dirname+'/pepo_nf'+str(nf)+'_ic'+str(ic)+'_k'+str(k)+'.h5'
          ioPEPO.savePEPO(fname,npepo,iprt=1)
          spepo = genPEPOsmall.genBPEPO(npepo,L,nf,auxbond=abond)
-         fname = dirname+'/spepo_nf'+str(nf)+'_ic'+str(ic)+'_k'+str(k)+'.h5'
+         print 'shape of spepo=',spepo.shape
+	 fname = dirname+'/spepo_nf'+str(nf)+'_ic'+str(ic)+'_k'+str(k)+'.h5'
          ioPEPO.savePEPO(fname,spepo,iprt=1)
 else:
 
