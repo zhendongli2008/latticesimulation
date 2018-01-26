@@ -1,8 +1,7 @@
-import autograd.numpy as np
 import peps
 import peps_h
-import autograd
 import scipy.optimize
+from include import np
 
 def test_min():
     np.random.seed(5)
@@ -21,6 +20,7 @@ def test_min():
         return PHP,PP,e
     def bound_energy_fn(vec):
         return energy_fn(vec, pdim, bond)[-1]
+    import autograd
     deriv = autograd.grad(bound_energy_fn)
 
     # Initialization
