@@ -6,9 +6,9 @@ import h5py
 import time
 einsum=autograd.numpy.einsum
 
-dirname = '../tmp2_4by4'
-nf = 0
-abond = 40
+dirname = '../tmp2_4by4nf4'
+nf = 4
+abond = 10
 
 def loadPEPO(fname,iprt=0):
    if iprt>0: print '[spepo_hlr.loadPEPO] fname=',fname
@@ -43,6 +43,7 @@ def eval_heish(pepsa, pepsb, iop):
          t0 = time.time()
          fname = dirname+'/spepo_nf'+str(nf)+'_ic'+str(ic)+'_k'+str(k)+'.h5'
          spepo = loadPEPO(fname,iprt=1)
+         print 'shape=',spepo.shape
          t1 = time.time()
          tmp = evalContraction(spepo,pepsa,pepsb,abond) 
          t2 = time.time()

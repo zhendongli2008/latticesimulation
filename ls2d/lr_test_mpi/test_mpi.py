@@ -6,6 +6,7 @@ from latticesimulation.ls2d.opt_simple import peps
 from latticesimulation.ls2d.opt_simple import peps_h
 from latticesimulation.ls2d.lr_test import peps_hlr
 import spepo_hlr
+import time
 
 from mpi4py import MPI
 comm = MPI.COMM_WORLD
@@ -19,11 +20,34 @@ np.random.seed(0)
 nr = 4
 nc = 4
 pdim = 2
-bond = 1
+bond = 2
 auxbond = 4
 
+# interface to autograd:
+def energy1(vec, bond, iprt=0):
+   P = peps.aspeps(vec, (nr,nc), pdim, bond)
+   PHP = peps_hlr.eval_heish(P, P, auxbond, iop)
+   PP = peps.dot(P,P,auxbond)
+   e = PHP/PP
+   if iprt and rank==0: print ' PHP,PP,PHP/PP,eav=',PHP,PP,e,e/(nr*nc)
+   return e 
+# dlog<P|1+tH+t^2+...|P>/dt|(t=0) = Energy
+def energy2(vec, bond, iprt):
+   P = peps.aspeps(vec, (nr,nc), pdim, bond)
+   PHP = spepo_hlr.eval_heish(P, P, iop)
+   PP = peps.dot(P,P,auxbond)
+   e = PHP/PP
+   if iprt and rank==0: print ' PHP,PP,PHP/PP,eav=',PHP,PP,e,e/(nr*nc)
+   return e 
+
+energyFun = energy2
+bound_energy_fn = lambda x: energyFun(x,bond,1)
+deriv = autograd.grad(bound_energy_fn)
+
 def deriv_mpi(vec):
+    if rank == 0: print '[deriv_mpi] size=',size
     comm.Barrier()
+    t0 = time.time()
     vec_iproc = np.zeros_like(vec)
     if rank == 0: vec_iproc = vec
     comm.Bcast([vec_iproc,mtype])
@@ -38,34 +62,16 @@ def deriv_mpi(vec):
        if i%size == rank:
           vtmp = vec_iproc.copy()
 	  vtmp[idr] += sgn[isn]*eps
-	  val_iproc[i] = sgn[isn]*energy1(vtmp,bond)
+	  val_iproc[idr] += sgn[isn]*energyFun(vtmp,bond,0)
     # Reduce
     val = np.zeros_like(val_iproc)
     comm.Reduce([val_iproc,mtype],
 		[val,mtype],op=MPI.SUM,root=0)
-    print val
-    exit()
-    return vec   
-
-# interface to autograd:
-def energy1(vec, bond):
-   P = peps.aspeps(vec, (nr,nc), pdim, bond)
-   PHP = peps_hlr.eval_heish(P, P, auxbond, iop)
-   PP = peps.dot(P,P,auxbond)
-   e = PHP/PP
-   print ' PHP,PP,PHP/PP,eav=',PHP,PP,e,e/(nr*nc)
-   return e 
-# dlog<P|1+tH+t^2+...|P>/dt|(t=0) = Energy
-def energy2(vec, bond):
-   P = peps.aspeps(vec, (nr,nc), pdim, bond)
-   PHP = spepo_hlr.eval_heish(P, P, iop)
-   PP = peps.dot(P,P,auxbond)
-   e = PHP/PP
-   print ' PHP,PP,PHP/PP,eav=',PHP,PP,e,e/(nr*nc)
-   return e 
-
-bound_energy_fn = lambda x: energy1(x,bond)
-deriv = autograd.grad(bound_energy_fn)
+    val = val/(2.0*eps)
+    comm.Bcast([val,mtype])
+    t1 = time.time()
+    if rank == 0: print '[deriv_mpi] time=',t1-t0
+    return val 
 
 def test_min():
     # Initialization
@@ -84,7 +90,7 @@ def test_min():
        P0 = peps.add(Pa,Pb)
     P0 = peps.add_noise(P0,pdim,bond,fac=0.1)
 
-    if rank == 4:
+    if rank == -1:
        PHPa = peps_hlr.eval_heish(P0, P0, auxbond, iop)
        print 'PHPa=',PHPa
        vec = peps.flatten(P0)
@@ -92,10 +98,14 @@ def test_min():
        print
        PHPb = spepo_hlr.eval_heish(P0, P0, iop)
        print 'PHPb=',PHPb
+       exit()
 
-    print '\nStart optimization...'
+    if rank == 0: print '\nStart optimization...'
     vec = peps.flatten(P0)
-    result = scipy.optimize.minimize(bound_energy_fn, jac=deriv, x0=vec,\
+    # test deriv
+    #print np.linalg.norm(deriv(vec)),vec[0]
+    #print np.linalg.norm(deriv_mpi(vec)),vec[0]
+    result = scipy.optimize.minimize(bound_energy_fn, jac=deriv_mpi, x0=vec,\
 			             options={'maxiter':10})
     return 0 
 

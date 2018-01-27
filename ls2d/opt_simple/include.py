@@ -2,7 +2,7 @@ import autograd
 import numpy
 import scipy.linalg
 
-iop = 1
+iop = 0
 if iop == 0:
    np = numpy
    npeinsum = numpy.einsum

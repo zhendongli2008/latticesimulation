@@ -13,7 +13,7 @@ def test_min():
     nr = 4
     nc = 4
     pdim = 2
-    bond = 2
+    bond = 1
     auxbond = bond**2
 
     # interface to autograd:
@@ -51,7 +51,10 @@ def test_min():
        # initial guess by AFM
        pepsa = peps.create((nr,nc),pdim,configa)
        pepsb = peps.create((nr,nc),pdim,configb)
-       peps0 = peps.add(pepsa,pepsb) # this has bond=2
+       if bond == 1:
+	  peps0 = pepsa
+       else:
+          peps0 = peps.add(pepsa,pepsb) # this has bond=2
        #pepsc = peps.random(peps0.shape, pdim, 1, 0.01) 
        #peps0 = peps.add(peps0, pepsc)
        peps0 = peps.add_noise(peps0,pdim,bond,fac=0.1)
@@ -59,9 +62,9 @@ def test_min():
 
        # test
        print 'energy1=',energy1(vec, bond)
-       exit()
        print 'energy2=',energy2(vec, bond)
        print 'nparams=',len(vec)
+       exit()
        print 'test energy' 
        print bound_energy_fn(vec)
        print 'test grad' 
