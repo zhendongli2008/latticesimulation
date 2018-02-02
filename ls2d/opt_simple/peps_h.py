@@ -1,9 +1,8 @@
-import autograd
-import autograd.numpy as np
 import peps
 import copy
+from include import np as np
+from include import npeinsum as einsum
 
-einsum=autograd.numpy.einsum
 I = np.eye(2)
 Sz = .5*np.array([[1.,0.],[0.,-1.]])
 Sm = np.array([[0.,1.],[0.,0.]])

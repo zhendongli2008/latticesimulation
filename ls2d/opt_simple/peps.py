@@ -3,9 +3,8 @@
 #
 import mps
 import mpo
-import autograd
-import autograd.numpy as np
-einsum=autograd.numpy.einsum
+from include import np
+from include import npeinsum as einsum
 
 def copy(pepsa):
     shape = pepsa.shape

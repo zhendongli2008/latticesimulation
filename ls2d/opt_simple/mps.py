@@ -1,8 +1,9 @@
 import utils
 import copy
-import autograd.numpy as N
-import autograd.numpy.linalg
-svd = autograd.numpy.linalg.svd
+from include import np as N
+from include import svd as svd
+from include import iop as svd_iop
+import scipy.linalg
 
 def check_lortho(tens):
     tensm=N.reshape(tens,[N.prod(tens.shape[:-1]),tens.shape[-1]])
@@ -148,7 +149,10 @@ def compress(mps,side,trunc=1.e-12,check_canonical=False):
         else:
             res=N.reshape(res,(N.prod(res.shape[:-1]),res.shape[-1]))
 
-        u,sigma,vt=autograd.numpy.linalg.svd(res,full_matrices=False)
+        if svd_iop == 0:
+	   u,sigma,vt=svd(res, full_matrices=False, lapack_driver='gesvd')
+        else:
+           u,sigma,vt=svd(res,full_matrices=False)
 
         if trunc==0:
             m_trunc=len(sigma)

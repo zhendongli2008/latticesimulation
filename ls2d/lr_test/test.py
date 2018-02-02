@@ -47,7 +47,10 @@ def test_min():
       
     Pa = peps.create((nr,nc),pdim,configa)
     Pb = peps.create((nr,nc),pdim,configb)
-    P0 = peps.add(Pa,Pb)
+    if bond == 1:
+       P0 = Pa
+    elif bond == 2:
+       P0 = peps.add(Pa,Pb)
     P0 = peps.add_noise(P0,pdim,bond,fac=0.1)
 
     PHPa = peps_hlr.eval_heish(P0, P0, auxbond, iop)

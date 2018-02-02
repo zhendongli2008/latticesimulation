@@ -1,17 +1,24 @@
-import autograd
 import numpy as np
 #import autograd.numpy as np
 from latticesimulation.ls2d.opt_simple import peps
 import h5py
 import time
-einsum=autograd.numpy.einsum
+import peps_contraction
+import autograd
 
+#einsum=autograd.numpy.einsum
+einsum=np.einsum
+
+#contraction = peps.contract_cpeps 
+contraction = peps_contraction.contract_cpeps
+
+ifprint = False
 dirname = '../tmp2_4by4nf4'
 nf = 4
-abond = 10
+abond = 40
 
 def loadPEPO(fname,iprt=0):
-   if iprt>0: print '[spepo_hlr.loadPEPO] fname=',fname
+   if ifprint and iprt>0: print '[spepo_hlr.loadPEPO] fname=',fname
    f = h5py.File(fname,'r')
    m,n = f['shape'].value
    pepo = np.empty((m,n),dtype=np.object)
@@ -43,14 +50,16 @@ def eval_heish(pepsa, pepsb, iop):
          t0 = time.time()
          fname = dirname+'/spepo_nf'+str(nf)+'_ic'+str(ic)+'_k'+str(k)+'.h5'
          spepo = loadPEPO(fname,iprt=1)
-         print 'shape=',spepo.shape
          t1 = time.time()
          tmp = evalContraction(spepo,pepsa,pepsb,abond) 
          t2 = time.time()
          val += clst[k]*fac[ic]*tmp
-         print 
-	 print 'ic,k=',(ic,k),'clst=',clst[k],'fac=',fac[ic],'tmp=',tmp,'val=',val
-         print 'time for loading =',t1-t0,' evaluation =',t2-t1
+         if ifprint:
+            print 
+	    print 'ic,k=',(ic,k),'clst=',clst[k],'fac=',fac[ic],'tmp=',tmp,'val=',val
+            print 'time for loading =',t1-t0,' evaluation =',t2-t1
+   # Convert scale
+   val = val*(nf+1.0)
    return val
 
 def evalContraction(spepo,pepsa,pepsb,auxbond):
@@ -98,5 +107,5 @@ def evalContraction(spepo,pepsa,pepsb,auxbond):
 	  s = tmp1.shape
 	  epeps0[ii,jj] = np.reshape(tmp1,(s[0]*s[1],s[2]*s[3],s[4]*s[5],s[6]*s[7]))
     # Contract 
-    val = peps.contract_cpeps(epeps0, auxbond)
+    val = contraction(epeps0, auxbond)
     return val

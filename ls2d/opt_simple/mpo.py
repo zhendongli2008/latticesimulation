@@ -1,6 +1,6 @@
-import autograd.numpy as N
 import math
 import mps
+from include import np as N
 
 def create(ops):
     """
