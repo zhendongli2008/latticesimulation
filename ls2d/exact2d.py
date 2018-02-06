@@ -283,7 +283,7 @@ if __name__ == '__main__':
 # 1. compare different lattice size - shift measure center (i,j) to boundary 
 # 2. compare different lambda?
    
-   fitCoulomb(k=10,m=40)
-   #curveplot(mass=0.05,k=10,m=50)
+   #fitCoulomb(k=10,m=40)
+   curveplot(mass=0.01,k=10,m=30)
    #curveplot(mass=0.001,k=5,m=40)
 
