@@ -1,0 +1,80 @@
+[genPEPO.genNPEPO] n= 7  psites= []
+
+[pf2d.initialization] n= 7  mass2= 1.0
+
+[nnz.genZSite2D] iop= 0
+ idx= 1  l,u,d,r= (0, 0, 0, 0)  fac= 1.0  sop= []  parity= 0  zsite= 5.0
+ idx= 2  l,u,d,r= (0, 0, 0, 3)  fac= 1.0  sop= ['cbar', 'c']  parity= 0  zsite= -1.0
+ idx= 3  l,u,d,r= (0, 0, 1, 1)  fac= 1.0  sop= ['c', 'cbar']  parity= 0  zsite= 1.0
+ idx= 4  l,u,d,r= (0, 0, 2, 2)  fac= -1.0  sop= ['cbar', 'c']  parity= 0  zsite= 1.0
+ idx= 5  l,u,d,r= (0, 0, 3, 0)  fac= -1.0  sop= ['cbar', 'c']  parity= 0  zsite= 1.0
+ idx= 6  l,u,d,r= (0, 1, 0, 2)  fac= 1.0  sop= ['cbar', 'c']  parity= 0  zsite= -1.0
+ idx= 7  l,u,d,r= (0, 1, 1, 0)  fac= 1.0  sop= ['c', 'cbar']  parity= 0  zsite= 1.0
+ idx= 8  l,u,d,r= (0, 2, 0, 1)  fac= 1.0  sop= ['c', 'cbar']  parity= 0  zsite= 1.0
+ idx= 9  l,u,d,r= (0, 2, 2, 0)  fac= -1.0  sop= ['cbar', 'c']  parity= 0  zsite= 1.0
+ idx= 10  l,u,d,r= (0, 3, 0, 0)  fac= 1.0  sop= ['cbar', 'c']  parity= 0  zsite= -1.0
+ idx= 11  l,u,d,r= (1, 0, 0, 1)  fac= 1.0  sop= ['c', 'cbar']  parity= 0  zsite= 1.0
+ idx= 12  l,u,d,r= (1, 0, 2, 0)  fac= -1.0  sop= ['cbar', 'c']  parity= 0  zsite= 1.0
+ idx= 13  l,u,d,r= (1, 1, 0, 0)  fac= 1.0  sop= ['c', 'cbar']  parity= 0  zsite= 1.0
+ idx= 14  l,u,d,r= (2, 0, 0, 2)  fac= -1.0  sop= ['cbar', 'c']  parity= 0  zsite= 1.0
+ idx= 15  l,u,d,r= (2, 0, 1, 0)  fac= -1.0  sop= ['c', 'cbar']  parity= 0  zsite= -1.0
+ idx= 16  l,u,d,r= (2, 2, 0, 0)  fac= -1.0  sop= ['cbar', 'c']  parity= 0  zsite= 1.0
+ idx= 17  l,u,d,r= (3, 0, 0, 0)  fac= -1.0  sop= ['cbar', 'c']  parity= 0  zsite= 1.0
+
+[nnz.genZSite2D] iop= 1
+ idx= 1  l,u,d,r= (0, 0, 0, 0)  fac= 1.0  sop= ['c', 'cbar']  parity= 0  zsite= 1.0
+
+[nnz.genZSite2D] iop= 2
+ idx= 1  l,u,d,r= (0, 0, 0, 1)  fac= 1.0  sop= ['c', 'cbar']  parity= 1  zsite= 1.0
+ idx= 2  l,u,d,r= (0, 0, 2, 0)  fac= -1.0  sop= ['cbar', 'c']  parity= 1  zsite= 1.0
+ idx= 3  l,u,d,r= (0, 1, 0, 0)  fac= 1.0  sop= ['c', 'cbar']  parity= 1  zsite= 1.0
+ idx= 4  l,u,d,r= (2, 0, 0, 0)  fac= -1.0  sop= ['cbar', 'c']  parity= 1  zsite= 1.0
+
+[nnz.genZSite2D] iop= 3
+ idx= 1  l,u,d,r= (0, 0, 0, 2)  fac= 1.0  sop= ['cbar', 'c']  parity= 1  zsite= -1.0
+ idx= 2  l,u,d,r= (0, 0, 1, 0)  fac= 1.0  sop= ['c', 'cbar']  parity= 1  zsite= 1.0
+ idx= 3  l,u,d,r= (0, 2, 0, 0)  fac= 1.0  sop= ['cbar', 'c']  parity= 1  zsite= -1.0
+ idx= 4  l,u,d,r= (1, 0, 0, 0)  fac= 1.0  sop= ['c', 'cbar']  parity= 1  zsite= 1.0
+
+<0|O|0>= 1.10701183049e-18
+
+Case-4: right
+i= 0 pa,pb= [(3, 3)] [(3, 4)] cab0= 0.0674149225834
+i= 0 pa,pb= [(3, 3)] [(3, 4)] cab1= 0.0674149213802
+i= 0 pa,pb= [(3, 4)] [(3, 3)] cab0= 0.0674149225834
+i= 0 pa,pb= [(3, 4)] [(3, 3)] cab1= 0.0674149213802
+i= 1 pa,pb= [(2, 2)] [(2, 5)] cab0= 0.00599793808415
+i= 1 pa,pb= [(2, 2)] [(2, 5)] cab1= 0.005997936393
+i= 1 pa,pb= [(2, 5)] [(2, 2)] cab0= 0.00599793808415
+i= 1 pa,pb= [(2, 5)] [(2, 2)] cab1= 0.005997936393
+
+Case-3: upper-right
+i= 0 pa,pb= [(3, 3)] [(4, 4)] cab0= 0.0318437109659
+i= 0 pa,pb= [(3, 3)] [(4, 4)] cab1= 0.031843710946
+i= 0 pa,pb= [(4, 4)] [(3, 3)] cab0= 0.0318437109659
+i= 0 pa,pb= [(4, 4)] [(3, 3)] cab1= 0.031843710946
+i= 1 pa,pb= [(2, 2)] [(5, 5)] cab0= 0.00117115070704
+i= 1 pa,pb= [(2, 2)] [(5, 5)] cab1= 0.00117115062412
+i= 1 pa,pb= [(5, 5)] [(2, 2)] cab0= 0.00117115070704
+i= 1 pa,pb= [(5, 5)] [(2, 2)] cab1= 0.00117115062412
+
+Case-2: above
+i= 0 pa,pb= [(3, 3)] [(4, 3)] cab0= 0.0674149225834
+i= 0 pa,pb= [(3, 3)] [(4, 3)] cab1= 0.0674149225774
+i= 0 pa,pb= [(4, 3)] [(3, 3)] cab0= 0.0674149225834
+i= 0 pa,pb= [(4, 3)] [(3, 3)] cab1= 0.0674149225774
+i= 1 pa,pb= [(2, 2)] [(5, 2)] cab0= 0.00599793808415
+i= 1 pa,pb= [(2, 2)] [(5, 2)] cab1= 0.00599793808373
+i= 1 pa,pb= [(5, 2)] [(2, 2)] cab0= 0.00599793808415
+i= 1 pa,pb= [(5, 2)] [(2, 2)] cab1= 0.00599793808373
+
+Case-1: upper-left
+i= 0 pa,pb= [(3, 3)] [(4, 2)] cab0= 0.0318437109659
+i= 0 pa,pb= [(3, 3)] [(4, 2)] cab1= 0.0318437109443
+i= 0 pa,pb= [(4, 2)] [(3, 3)] cab0= 0.0318437109659
+i= 0 pa,pb= [(4, 2)] [(3, 3)] cab1= 0.0318437109443
+i= 1 pa,pb= [(3, 3)] [(5, 1)] cab0= 0.00571885586938
+i= 1 pa,pb= [(3, 3)] [(5, 1)] cab1= 0.00571885585941
+i= 1 pa,pb= [(5, 1)] [(3, 3)] cab0= 0.00571885586938
+i= 1 pa,pb= [(5, 1)] [(3, 3)] cab1= 0.00571885585941
+

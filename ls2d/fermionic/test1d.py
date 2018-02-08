@@ -3,6 +3,7 @@ import scipy.linalg
 import matplotlib.pyplot as plt
 from zmpo_dmrg.source.mpsmpo.mpo_class import class_mpo
 from zmpo_dmrg.source.mpsmpo.mps_class import class_mps
+import nnz
 
 # Boundary exponents
 def kbd(ka):
@@ -17,6 +18,7 @@ def getVij(n,a,kappa0,ifbd=False):
       bd = kbd(kappa0*a)
       tij[0,0] -= bd 
       tij[n-1,n-1] -= bd
+   print '\nexact detM=',scipy.linalg.det(tij)
    vij = numpy.linalg.inv(tij)*(2*kappa0*a)
    return vij
 
@@ -58,9 +60,9 @@ def genGMPO(n,left,right,middle,ifnormalize=False):
    # Normalization
    if ifnormalize:
       Z0 = reduce(numpy.dot,[A0]+[A1]*(n-2)+[A2])
-      fac = numpy.power(Z0,-1.0/n)
-      print ' Z0=',Z0,' n=',n,' fac=',fac
-      sites = map(lambda x:x*fac,sites)
+      scale = numpy.power(Z0,-1.0/n)
+      print ' Z0=',Z0,' n=',n,' scale=',scale
+      sites = map(lambda x:x*scale,sites)
    vmpo = class_mpo(n,sites)
    return vmpo
 
@@ -116,22 +118,10 @@ def genFMPO(n,a,kappa0,ifbd=False):
    print '\n[genFMPO] using spinless pseudofermion'
    # A,B,D
    lam = 2.0+(kappa0*a)**2
-   A1 = numpy.array([[lam ,0.,0.,-1.],
-	   	     [0.  ,1.,0., 0.],
-		     [0.  ,0.,1., 0.],
-		     [1.  ,0.,0., 0.]])
-   B1 = numpy.array([[0.,0.,-1.,0.],
-	   	     [1.,0., 0.,0.],
-		     [0.,0., 0.,0.],
-		     [0.,0., 0.,0.]])
-   C1 = numpy.array([[0.,1.,0.,0.],
-	   	     [0.,0.,0.,0.],
-		     [1.,0.,0.,0.],
-		     [0.,0.,0.,0.]])
-   D1 = numpy.array([[-1.,0.,0.,0.],
-	   	     [ 0.,0.,0.,0.],
-		     [ 0.,0.,0.,0.],
-		     [ 0.,0.,0.,0.]])
+   A1 = nnz.genZSite1D(lam,0)
+   D1 = nnz.genZSite1D(lam,1)
+   B1 = nnz.genZSite1D(lam,2)
+   C1 = nnz.genZSite1D(lam,3)
    A0 = A1[0,:].copy()
    B0 = B1[0,:].copy()
    D0 = D1[0,:].copy()
@@ -170,30 +160,27 @@ def testVmpo():
    a = float(L)/(n+1)
    print 'a=',a
    #========================================================
-   # Exact exponential
-   x = numpy.arange(-nc,nc+1)*a
-   z = numpy.exp(-kappa0*abs(x))
-   plt.plot(x,z,'g-',label='Exact_Exp')
-   
-   ifbd = True 
-   # Original
-   vmpo = genEVmpoScaled(n,a,kappa0,ng)
-   vij = numpy.array([genVij(nc,i) for i in range(n)])
-   plt.plot(x,vij,'ko-',label='Num_OBC (ng='+str(ng)+')')
-   
-   # Vij
-   for np in [nc,0,1,nc/2]:
-      vij = getVij(n,a,kappa0,ifbd=ifbd)
-      plt.plot(x,vij[np] ,'bx--',label='Kinv (np='+str(np)+')')
-      # Fermionic
-      vmpo = genFMPO(n,a,kappa0,ifbd=ifbd)
-      vij = numpy.array([genVij(np,i) for i in range(n)])*(-2*kappa0*a)
-      plt.plot(x,vij,'ro',label='FMPO_OBC (np='+str(np)+')')
- 
-   #========================================================
-   #plt.ylim([0.0,1.5])
-   plt.legend()
-   plt.show()
+   for ifbd in [False,True]: 
+      # Exact exponential
+      x = numpy.arange(-nc,nc+1)*a
+      z = numpy.exp(-kappa0*abs(x))
+      plt.plot(x,z,'g-',label='Exact_Exp')
+      # Original
+      vmpo = genEVmpoScaled(n,a,kappa0,ng)
+      vij = numpy.array([genVij(nc,i) for i in range(n)])
+      plt.plot(x,vij,'ko-',label='Num_OBC (ng='+str(ng)+')')
+      # Vij
+      for np in [nc,0,1,nc/2]:
+         vij = getVij(n,a,kappa0,ifbd=ifbd)
+         plt.plot(x,vij[np] ,'bx--',label='Kinv (np='+str(np)+')')
+         # Fermionic
+         vmpo = genFMPO(n,a,kappa0,ifbd=ifbd)
+         vij = numpy.array([genVij(np,i) for i in range(n)])*(2.0*kappa0*a)
+         plt.plot(x,vij,'ro',label='FMPO_OBC (np='+str(np)+')')
+      # Plot
+      plt.legend()
+      plt.show()
+      #========================================================
    return 0
 
 if __name__ == '__main__':

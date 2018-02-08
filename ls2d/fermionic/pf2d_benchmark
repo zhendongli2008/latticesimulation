@@ -1,0 +1,103 @@
+[pf2d.initialization] n= 17  mass2= 0.2
+
+[nnz.genZSite2D] iop= 0
+ idx= 1  l,u,d,r= (0, 0, 0, 0)  fac= 1.0  sop= []  parity= 0  zsite= 4.2
+ idx= 2  l,u,d,r= (0, 0, 0, 3)  fac= 1.0  sop= ['cbar', 'c']  parity= 0  zsite= -1.0
+ idx= 3  l,u,d,r= (0, 0, 1, 1)  fac= 1.0  sop= ['c', 'cbar']  parity= 0  zsite= 1.0
+ idx= 4  l,u,d,r= (0, 0, 2, 2)  fac= -1.0  sop= ['cbar', 'c']  parity= 0  zsite= 1.0
+ idx= 5  l,u,d,r= (0, 0, 3, 0)  fac= -1.0  sop= ['cbar', 'c']  parity= 0  zsite= 1.0
+ idx= 6  l,u,d,r= (0, 1, 0, 2)  fac= 1.0  sop= ['cbar', 'c']  parity= 0  zsite= -1.0
+ idx= 7  l,u,d,r= (0, 1, 1, 0)  fac= 1.0  sop= ['c', 'cbar']  parity= 0  zsite= 1.0
+ idx= 8  l,u,d,r= (0, 2, 0, 1)  fac= 1.0  sop= ['c', 'cbar']  parity= 0  zsite= 1.0
+ idx= 9  l,u,d,r= (0, 2, 2, 0)  fac= -1.0  sop= ['cbar', 'c']  parity= 0  zsite= 1.0
+ idx= 10  l,u,d,r= (0, 3, 0, 0)  fac= 1.0  sop= ['cbar', 'c']  parity= 0  zsite= -1.0
+ idx= 11  l,u,d,r= (1, 0, 0, 1)  fac= 1.0  sop= ['c', 'cbar']  parity= 0  zsite= 1.0
+ idx= 12  l,u,d,r= (1, 0, 2, 0)  fac= -1.0  sop= ['cbar', 'c']  parity= 0  zsite= 1.0
+ idx= 13  l,u,d,r= (1, 1, 0, 0)  fac= 1.0  sop= ['c', 'cbar']  parity= 0  zsite= 1.0
+ idx= 14  l,u,d,r= (2, 0, 0, 2)  fac= -1.0  sop= ['cbar', 'c']  parity= 0  zsite= 1.0
+ idx= 15  l,u,d,r= (2, 0, 1, 0)  fac= -1.0  sop= ['c', 'cbar']  parity= 0  zsite= -1.0
+ idx= 16  l,u,d,r= (2, 2, 0, 0)  fac= -1.0  sop= ['cbar', 'c']  parity= 0  zsite= 1.0
+ idx= 17  l,u,d,r= (3, 0, 0, 0)  fac= -1.0  sop= ['cbar', 'c']  parity= 0  zsite= 1.0
+
+[binarySearch] shape= (17, 17) auxbond= 40
+ i=  1 (a,b,w)= (0.0, 1.0, 1.0) scale= 0.238095238095 z= 2.69954475652e-19
+ apply "exact" scale= 0.276059247267
+ i=  2 (a,b,w)= (0.23809523809523808, 1.0, 0.76190476190476186) scale= 0.276059247267 z= 0.075775604441
+ apply "exact" scale= 0.278534733868
+ i=  3 (a,b,w)= (0.27605924726730047, 1.0, 0.72394075273269953) scale= 0.278534733868 z= 1.0000000001
+ apply "exact" scale= 0.278534733868
+ i=  4 (a,b,w)= (0.27605924726730047, 0.27853473386814931, 0.0024754866008488419) scale= 0.278534733868 z= 0.999999999868
+ i=  5 (a,b,w)= (0.27853473386805294, 0.27853473386814931, 9.6367358537463588e-14) scale= 0.278534733868 z= 0.999999999872
+ No good solution exists 0.278534733868 z= 0.999999999872
+
+[nnz.genZSite2D] iop= 1
+ idx= 1  l,u,d,r= (0, 0, 0, 0)  fac= 1.0  sop= ['c', 'cbar']  parity= 0  zsite= 1.0
+
+[nnz.genZSite2D] iop= 2
+ idx= 1  l,u,d,r= (0, 0, 0, 1)  fac= 1.0  sop= ['c', 'cbar']  parity= 1  zsite= 1.0
+ idx= 2  l,u,d,r= (0, 0, 2, 0)  fac= -1.0  sop= ['cbar', 'c']  parity= 1  zsite= 1.0
+ idx= 3  l,u,d,r= (0, 1, 0, 0)  fac= 1.0  sop= ['c', 'cbar']  parity= 1  zsite= 1.0
+ idx= 4  l,u,d,r= (2, 0, 0, 0)  fac= -1.0  sop= ['cbar', 'c']  parity= 1  zsite= 1.0
+
+[nnz.genZSite2D] iop= 3
+ idx= 1  l,u,d,r= (0, 0, 0, 2)  fac= 1.0  sop= ['cbar', 'c']  parity= 1  zsite= -1.0
+ idx= 2  l,u,d,r= (0, 0, 1, 0)  fac= 1.0  sop= ['c', 'cbar']  parity= 1  zsite= 1.0
+ idx= 3  l,u,d,r= (0, 2, 0, 0)  fac= 1.0  sop= ['cbar', 'c']  parity= 1  zsite= -1.0
+ idx= 4  l,u,d,r= (1, 0, 0, 0)  fac= 1.0  sop= ['c', 'cbar']  parity= 1  zsite= 1.0
+
+Test Z:
+direct detM= 2.69069737311e+160
+scale= 0.278534733868 Z= 2.69069744547e+160
+
+Test local2:
+direct point= (0, 0) 0.279316982873
+direct point= (0, 1) 0.309219805931
+direct point= (8, 8) 0.39589263548
+point= (0, 0) auxbond= 10 0.279432794478 0.000115811605718
+point= (0, 0) auxbond= 25 0.27931650465 -4.78222287825e-07
+point= (0, 0) auxbond= 40 0.279316982869 -4.01201294409e-12
+point= (0, 1) auxbond= 10 0.309347641693 0.000127835762371
+point= (0, 1) auxbond= 25 0.30921927582 -5.30110474517e-07
+point= (0, 1) auxbond= 40 0.309219805956 2.53663201555e-11
+point= (8, 8) auxbond= 10 0.396021746703 0.000129111222752
+point= (8, 8) auxbond= 25 0.395892111282 -5.24198542406e-07
+point= (8, 8) auxbond= 40 0.395892632231 -3.24908766558e-09
+
+Test local1:
+direct point= (3, 3) (7, 6) 0.0124894608725
+direct point= (8, 8) (11, 6) 0.0284013328268
+direct point= (8, 8) (10, 8) 0.0804780114171
+direct point= (8, 8) (8, 10) 0.0804780114171
+
+case-d: right
+point= (8, 8) (8, 10) auxbond= 10 0.0804939379078 1.59264906518e-05
+point= (8, 8) (8, 10) auxbond= 25 0.0804779422433 -6.91738257785e-08
+point= (8, 8) (8, 10) auxbond= 40 0.0804780115883 1.71184635911e-10
+point= (8, 8) (8, 10) auxbond= 10 0.0804939379078 1.59264906518e-05
+point= (8, 8) (8, 10) auxbond= 25 0.0804779422433 -6.91738257924e-08
+point= (8, 8) (8, 10) auxbond= 40 0.0804780115883 1.71184622033e-10
+
+case-c: above
+point= (8, 8) (10, 8) auxbond= 10 0.0805048298953 2.68184781348e-05
+point= (8, 8) (10, 8) auxbond= 25 0.0804779322368 -7.91803547173e-08
+point= (8, 8) (10, 8) auxbond= 40 0.0804780098702 -1.54693720333e-09
+point= (8, 8) (10, 8) auxbond= 10 0.0805048298953 2.68184781353e-05
+point= (8, 8) (10, 8) auxbond= 25 0.0804779322368 -7.91803527328e-08
+point= (8, 8) (10, 8) auxbond= 40 0.0804780098702 -1.54693788335e-09
+
+case-a: upper-right
+point= (3, 3) (7, 6) auxbond= 10 0.0124927603599 3.29948734858e-06
+point= (3, 3) (7, 6) auxbond= 25 0.0124894477621 -1.31104348055e-08
+point= (3, 3) (7, 6) auxbond= 40 0.0124894608881 1.55874931018e-11
+point= (3, 3) (7, 6) auxbond= 10 0.0124927603599 3.2994873486e-06
+point= (3, 3) (7, 6) auxbond= 25 0.0124894477621 -1.3110434639e-08
+point= (3, 3) (7, 6) auxbond= 40 0.0124894608881 1.55875590213e-11
+
+case-b: upper-left
+point= (8, 8) (11, 6) auxbond= 10 0.0284112686704 9.93584351813e-06
+point= (8, 8) (11, 6) auxbond= 25 0.028401322667 -1.01597937702e-08
+point= (8, 8) (11, 6) auxbond= 40 0.0284013319988 -8.2802149165e-10
+point= (8, 8) (11, 6) auxbond= 10 0.0284112686704 9.93584351865e-06
+point= (8, 8) (11, 6) auxbond= 25 0.028401322667 -1.01597937355e-08
+point= (8, 8) (11, 6) auxbond= 40 0.0284013319988 -8.28022480442e-10
+

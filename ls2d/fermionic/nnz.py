@@ -3,6 +3,8 @@ import numpy
 # [coeff,op]
 alpha = [[1.0,['id']],[1.0,['cbar']],[1.0,['c']],[1.0,['cbar','c']]]
 beta  = [[1.0,['id']],[1.0,['c']],[-1.0,['cbar']],[-1.0,['cbar','c']]]
+gamma = alpha
+delta = beta
 plst  = [0,1,1,0]
 
 # Product of a list of operators
@@ -24,8 +26,8 @@ def screening(op):
    return sop
 
 # For partition function Z
-def genZSite(lam,iop):
-   print '\n[nnz.genZSite] iop=',iop
+def genZSite2D(lam,iop):
+   print '\n[nnz.genZSite2D] iop=',iop
    zsite = numpy.zeros((4,4,4,4))
    idx = 0
    for l in range(4):
@@ -33,21 +35,19 @@ def genZSite(lam,iop):
      for d in range(4):
       for r in range(4):
 	 if iop == 0:
-            oplst = [beta[u],beta[l],alpha[d],alpha[r]]
+            oplst = [delta[d],beta[l],gamma[u],alpha[r]]
 	 elif iop == 1:
-            oplst = [beta[u],beta[l],alpha[d],alpha[r],[1.0,['cbar','c']]]
+            oplst = [delta[d],beta[l],gamma[u],alpha[r],[1.0,['c','cbar']]]
 	 elif iop == 2:
-            oplst = [beta[u],beta[l],[1.0,['cbar']],alpha[d],alpha[r]]
+            oplst = [delta[d],beta[l],[1.0,['c']],gamma[u],alpha[r]]
 	 elif iop == 3:   
-            oplst = [beta[u],beta[l],[1.0,['c']],alpha[d],alpha[r]]
+            oplst = [delta[d],beta[l],[1.0,['cbar']],gamma[u],alpha[r]]
          fac,op = product(oplst)
          # Remove single 
 	 sop = screening(op)
          if sop != None:
 	    idx += 1	  
 	    parity = (plst[u]+plst[l]+plst[d]+plst[r])%2
-	    print ' idx=',idx,' l,u,d,r=',(l,u,d,r),\
-		  ' fac=',fac,' sop=',sop,' parity=',parity
             # Do the integration with projection (1-lambda*cbar*c)
 	    if len(sop) == 0:
 	       assert abs(fac-1.0)<1.e-10
@@ -55,10 +55,79 @@ def genZSite(lam,iop):
 	    else:
 	       if sop == ['c','cbar']:
 	          zsite[l,u,d,r] = fac
-	       if sop == ['cbar','c']:
+	       elif sop == ['cbar','c']:
 	          zsite[l,u,d,r] = -fac
+	       else:
+	 	  print 'no such case!'
+		  exit(1)
+	    print ' idx=',idx,' l,u,d,r=',(l,u,d,r),\
+		  ' fac=',fac,' sop=',sop,' parity=',parity,' zsite=',zsite[l,u,d,r]
+   return zsite
+
+# For partition function Z
+def genZSite1D(lam,iop):
+   print '\n[nnz.genZSite1D] iop=',iop
+   zsite = numpy.zeros((4,4))
+   idx = 0
+   for l in range(4):
+      for r in range(4):
+	 if iop == 0:
+            oplst = [beta[l],alpha[r]]
+	 elif iop == 1:
+            oplst = [beta[l],alpha[r],[1.0,['c','cbar']]]
+	 elif iop == 2:
+            oplst = [beta[l],[1.0,['c']],alpha[r]]
+	 elif iop == 3:   
+            oplst = [beta[l],[1.0,['cbar']],alpha[r]]
+         fac,op = product(oplst)
+         # Remove single 
+	 sop = screening(op)
+         if sop != None:
+	    idx += 1	  
+	    parity = (plst[l]+plst[r])%2
+            # Do the integration with projection (1-lambda*cbar*c)
+	    if len(sop) == 0:
+	       assert abs(fac-1.0)<1.e-10
+	       zsite[l,r] = lam
+	    else:
+	       if sop == ['c','cbar']:
+	          zsite[l,r] = fac
+	       if sop == ['cbar','c']:
+	          zsite[l,r] = -fac
+	    print ' idx=',idx,' l,r=',(l,r),\
+		  ' fac=',fac,' sop=',sop,' parity=',parity,' zsite=',zsite[l,r]
    return zsite
 
 
 if __name__ == '__main__':
-   genZSite(1.0,0)
+   print '\nGenerate nonzero elements for 1D:'
+   lam = 99.99
+   tmp1 = genZSite1D(lam,0)
+   tmp2 = numpy.array([[lam ,0.,0.,-1.],
+	   	     [0.  ,1.,0., 0.],
+		     [0.  ,0.,1., 0.],
+		     [1.  ,0.,0., 0.]])
+   print '\ndiff_A1=',numpy.linalg.norm(tmp1-tmp2)
+   tmp1 = genZSite1D(lam,1)
+   tmp2 = numpy.array([[1.,0.,0.,0.],
+	   	     [ 0.,0.,0.,0.],
+		     [ 0.,0.,0.,0.],
+		     [ 0.,0.,0.,0.]])
+   print '\ndiff_D1=',numpy.linalg.norm(tmp1-tmp2)
+   tmp1 = genZSite1D(lam,2)
+   tmp2 = numpy.array([[0.,1.,0.,0.],
+	   	     [0.,0.,0.,0.],
+		     [1.,0.,0.,0.],
+		     [0.,0.,0.,0.]])
+   print '\ndiff_B1=',numpy.linalg.norm(tmp1-tmp2)
+   tmp1 = genZSite1D(lam,3)
+   tmp2 = numpy.array([[0.,0.,-1.,0.],
+	   	     [1.,0., 0.,0.],
+		     [0.,0., 0.,0.],
+		     [0.,0., 0.,0.]])
+   print '\ndiff_C1=',numpy.linalg.norm(tmp1-tmp2)
+   print '\nGenerate nonzero elements for 2D:'
+   genZSite2D(lam,0)
+   genZSite2D(lam,1)
+   genZSite2D(lam,2)
+   genZSite2D(lam,3)
