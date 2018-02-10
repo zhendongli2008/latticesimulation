@@ -4,7 +4,7 @@ from latticesimulation.ls2d import contraction2d
 
 # sum_{i<j} Vij*ni*nj; note that on site term is to be added in a separated PEPO.
 def genNPEPO(n=6,mass2=1.0,iprt=0,auxbond=20,\
-	     nij=[],psites=[]):
+	     nij=[],psites=[],iflocal=False):
    print '\n[genPEPO.genNPEPO] n=',n,' psites=',psites
    # Generate local field sites
    scale,zpeps,local2,local1a,local1b = pf2d.initialization(n,mass2,iprt,auxbond)
@@ -65,6 +65,8 @@ def genNPEPO(n=6,mass2=1.0,iprt=0,auxbond=20,\
             else:
 	       tensor1i = numpy.zeros_like(tensor0)
 	       tensor1j = numpy.zeros_like(tensor0)
+	    if iflocal:
+	       tmp[0,1,0,1] = numpy.einsum('pq,ludr->pqludr',ni,local2) 
 	    # Case-4: right
 	    pvec = numpy.array([1,-1,-1,1])
 	    tmp[0,1,0,2] = numpy.einsum('pqludr,u->pqludr',tensor1i,pvec)
@@ -119,7 +121,8 @@ if __name__ == '__main__':
    mass2 = 1.0
    iprt = 1
    abond = 40
-   npepo = genNPEPO(n,mass2,iprt=0,auxbond=abond)
+   iflocal =True
+   npepo = genNPEPO(n,mass2,iprt=0,auxbond=abond,iflocal=iflocal)
    vac = numpy.zeros(npepo.shape,dtype=numpy.int)
    print '\n<0|O|0>=',ceval(npepo,vac,vac,auxbond=abond)
    
@@ -131,6 +134,17 @@ if __name__ == '__main__':
    tinv = tinv.reshape((n,n,n,n))
 
    k = 2
+
+   print '\nCase-0: right'
+   for i in range(k):
+      palst = [(m-i,m-i)]
+      pblst = [(m-i,m-i)]
+      # Comparison   
+      cab0 = tinv[palst[0]][pblst[0]]
+      print 'i=',i,'pa,pb=',palst,pblst,'cab0=',cab0
+      cab1 = pepo2cpeps(npepo,palst,pblst,auxbond=abond)
+      print 'i=',i,'pa,pb=',palst,pblst,'cab1=',cab1[0,0]
+
    print '\nCase-4: right'
    for i in range(k):
       palst = [(m-i,m-i)]
@@ -140,6 +154,13 @@ if __name__ == '__main__':
       print 'i=',i,'pa,pb=',palst,pblst,'cab0=',cab0
       cab1 = pepo2cpeps(npepo,palst,pblst,auxbond=abond)
       print 'i=',i,'pa,pb=',palst,pblst,'cab1=',cab1[0,0]
+      if iflocal:
+         cab1i = pepo2cpeps(npepo,palst,palst,auxbond=abond)
+         print 'i=',i,'pa,pa=',palst,pblst,'cab1i=',cab1i[0,0]
+         cab1j = pepo2cpeps(npepo,pblst,pblst,auxbond=abond)
+         print 'i=',i,'pb,pb=',pblst,pblst,'cab1j=',cab1j[0,0]
+         print 'i=',i,'pa,pb=',palst,pblst,'cab1=',cab1[0,0]
+	 print 'net vij=',(cab1-cab1i-cab1j)[0,0]
       #>>> 
       palst = [(m-i,m+i+1)]
       pblst = [(m-i,m-i)]
@@ -148,6 +169,7 @@ if __name__ == '__main__':
       print 'i=',i,'pa,pb=',palst,pblst,'cab0=',cab0
       cab1 = pepo2cpeps(npepo,palst,pblst,auxbond=abond)
       print 'i=',i,'pa,pb=',palst,pblst,'cab1=',cab1[0,0]
+   exit()
 
 
    print '\nCase-3: upper-right'
