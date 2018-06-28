@@ -1,5 +1,5 @@
 import numpy
-import pf2d
+import gen2d
 from latticesimulation.ls2d import contraction2d
 
 # sum_{i<j} Vij*ni*nj; note that on site term is to be added in a separated PEPO.
@@ -7,7 +7,7 @@ def genNPEPO(n=6,mass2=1.0,iprt=0,auxbond=20,\
 	     nij=[],psites=[],iflocal=False):
    print '\n[genPEPO.genNPEPO] n=',n,' psites=',psites
    # Generate local field sites
-   scale,zpeps,local2,local1a,local1b = pf2d.initialization(n,mass2,iprt,auxbond)
+   scale,zpeps,local2,local1a,local1b = gen2d.initialization(n,mass2,iprt,auxbond)
    # Prepare operators
    idn = numpy.array([[1.,0.],[0.,1.]])
    if len(nij) == 0:
@@ -121,7 +121,7 @@ if __name__ == '__main__':
    mass2 = 1.0
    iprt = 1
    abond = 40
-   iflocal =True
+   iflocal = False #True
    npepo = genNPEPO(n,mass2,iprt=0,auxbond=abond,iflocal=iflocal)
    vac = numpy.zeros(npepo.shape,dtype=numpy.int)
    print '\n<0|O|0>=',ceval(npepo,vac,vac,auxbond=abond)
@@ -135,7 +135,7 @@ if __name__ == '__main__':
 
    k = 2
 
-   print '\nCase-0: right'
+   print '\nCase-0: central'
    for i in range(k):
       palst = [(m-i,m-i)]
       pblst = [(m-i,m-i)]
@@ -169,8 +169,6 @@ if __name__ == '__main__':
       print 'i=',i,'pa,pb=',palst,pblst,'cab0=',cab0
       cab1 = pepo2cpeps(npepo,palst,pblst,auxbond=abond)
       print 'i=',i,'pa,pb=',palst,pblst,'cab1=',cab1[0,0]
-   exit()
-
 
    print '\nCase-3: upper-right'
    for i in range(k):
@@ -190,7 +188,6 @@ if __name__ == '__main__':
       cab1 = pepo2cpeps(npepo,palst,pblst,auxbond=abond)
       print 'i=',i,'pa,pb=',palst,pblst,'cab1=',cab1[0,0]
 
-
    print '\nCase-2: above'
    for i in range(k):
       palst = [(m-i,m-i)]
@@ -209,7 +206,6 @@ if __name__ == '__main__':
       cab1 = pepo2cpeps(npepo,palst,pblst,auxbond=abond)
       print 'i=',i,'pa,pb=',palst,pblst,'cab1=',cab1[0,0]
 
-
    print '\nCase-1: upper-left'
    for i in range(k):
       palst = [(m,m)]
@@ -227,14 +223,3 @@ if __name__ == '__main__':
       print 'i=',i,'pa,pb=',palst,pblst,'cab0=',cab0
       cab1 = pepo2cpeps(npepo,palst,pblst,auxbond=abond)
       print 'i=',i,'pa,pb=',palst,pblst,'cab1=',cab1[0,0]
-# 
-# Case-1: upper-left
-# i= 0 pa,pb= [(3, 3)] [(4, 2)] cab0= 0.0318437109659
-# i= 0 pa,pb= [(3, 3)] [(4, 2)] cab1= -0.0318437109443
-# i= 0 pa,pb= [(4, 2)] [(3, 3)] cab0= 0.0318437109659
-# i= 0 pa,pb= [(4, 2)] [(3, 3)] cab1= -0.0318437109443
-# i= 1 pa,pb= [(3, 3)] [(5, 1)] cab0= 0.00571885586938
-# i= 1 pa,pb= [(3, 3)] [(5, 1)] cab1= -0.00571885585941
-# i= 1 pa,pb= [(5, 1)] [(3, 3)] cab0= 0.00571885586938
-# i= 1 pa,pb= [(5, 1)] [(3, 3)] cab1= -0.00571885585941
-# 

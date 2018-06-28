@@ -1,10 +1,13 @@
+#
+# Compute scale,zpeps,local2,local1a,local1b for 2D case
+#
 import numpy
 import scipy.linalg
 from latticesimulation.ls2d import contraction2d
-import nnz
+import genSite
 
 def initialization(n,mass2=1.0,iprt=0,auxbond=20):
-   print '\n[pf2d.initialization] n=',n,' mass2=',mass2
+   print '\n[gen2d.initialization] n=',n,' mass2=',mass2
    # Construct Z=tr(T) 
    # Shape:
    #  (2,0) (2,1) (2,2)
@@ -15,7 +18,7 @@ def initialization(n,mass2=1.0,iprt=0,auxbond=20):
    # Interior
    d = 4 
    lam = 4.0+mass2
-   tint = nnz.genZSite2D(lam,0)
+   tint = genSite.genZSite2D(lam,0)
    for i in range(1,n-1):
       for j in range(1,n-1):
          zpeps[i,j] = tint.copy()
@@ -33,9 +36,9 @@ def initialization(n,mass2=1.0,iprt=0,auxbond=20):
    # Compute scaling factor
    scale,z = contraction2d.binarySearch(zpeps,auxbond,iprt=iprt)
    # Local terms
-   local2  = scale*nnz.genZSite2D(lam,1)
-   local1a = scale*nnz.genZSite2D(lam,2)
-   local1b = scale*nnz.genZSite2D(lam,3)
+   local2  = scale*genSite.genZSite2D(lam,1)
+   local1a = scale*genSite.genZSite2D(lam,2)
+   local1b = scale*genSite.genZSite2D(lam,3)
    zpeps = scale*zpeps
    return scale,zpeps,local2,local1a,local1b
 

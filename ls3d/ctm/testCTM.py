@@ -1,7 +1,7 @@
 import numpy
 import scipy.linalg
 import matplotlib.pyplot as plt
-import pf2d
+import gen2d
 from latticesimulation.ls2d import exact2d
 from latticesimulation.ls2d import contraction2d
 
@@ -36,7 +36,7 @@ mass2 = mass**2
 auxbond = 20
 m = 5
 n = 2*m+1
-result = pf2d.initialization(n,mass2,iprt,auxbond)
+result = gen2d.initialization(n,mass2,iprt,auxbond)
 scale,zpeps,local2,local1a,local1b = result
 
 for auxbond in [20]:
