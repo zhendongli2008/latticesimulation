@@ -3,8 +3,9 @@ import scipy.linalg
 import scipy.optimize
 import matplotlib.pyplot as plt
 
+bc = 'OBC'
+
 def genT1d(n):
-   bc = 'OBC'
    tij = numpy.diag([2.0]*n)
    for i in range(n-1):
       tij[i,i+1] = tij[i+1,i] = -1.0
@@ -23,6 +24,15 @@ def genT2d(n,mass=0.0):
    mat = numpy.einsum('ij,ab->iajb',tij,iden)\
        + numpy.einsum('ij,ab->iajb',iden,tij)
    mat = mat + mass**2*numpy.einsum('ij,ab->iajb',iden,iden)
+   return mat 
+
+def genT3d(n,mass=0.0):
+   tij = genT1d(n)
+   iden = numpy.identity(n)
+   mat = numpy.einsum('ij,ab,xy->iaxjby',tij,iden,iden)\
+       + numpy.einsum('ij,ab,xy->iaxjby',iden,tij,iden)\
+       + numpy.einsum('ij,ab,xy->iaxjby',iden,iden,tij)
+   mat = mat + mass**2*numpy.einsum('ij,ab,xy->iaxjby',iden,iden,iden)
    return mat 
 
 def test_1d(m):

@@ -5,6 +5,8 @@ alpha = [[1.0,['id']],[1.0,['cbar']],[1.0,['c']],[1.0,['cbar','c']]]
 beta  = [[1.0,['id']],[1.0,['c']],[-1.0,['cbar']],[-1.0,['cbar','c']]]
 gamma = alpha
 delta = beta
+sigma = alpha
+tau   = beta
 plst  = [0,1,1,0]
 
 # Product of a list of operators
@@ -98,6 +100,46 @@ def genZSite1D(lam,iop):
 		  ' fac=',fac,' sop=',sop,' parity=',parity,' zsite=',zsite[l,r]
    return zsite
 
+# For partition function Z
+def genZSite3D(lam,iop):
+   print '\n[nnz.genZSite3D] iop=',iop
+   zsite = numpy.zeros((4,4,4,4,4,4)) # ludrbt
+   idx = 0
+   for l in range(4):
+    for u in range(4):
+     for d in range(4):
+      for r in range(4):
+       for b in range(4):
+        for t in range(4):
+	 if iop == 0:
+            oplst = [tau[b],delta[d],beta[l],sigma[t],gamma[u],alpha[r]]
+	 elif iop == 1:
+            oplst = [tau[b],delta[d],beta[l],sigma[t],gamma[u],alpha[r],[1.0,['c','cbar']]]
+	 elif iop == 2:
+            oplst = [tau[b],delta[d],beta[l],[1.0,['c']],sigma[t],gamma[u],alpha[r]]
+	 elif iop == 3:   
+            oplst = [tau[b],delta[d],beta[l],[1.0,['cbar']],sigma[t],gamma[u],alpha[r]]
+         fac,op = product(oplst)
+         # Remove single 
+	 sop = screening(op)
+         if sop != None:
+	    idx += 1	  
+	    parity = (plst[u]+plst[l]+plst[d]+plst[r]+plst[t]+plst[b])%2
+            # Do the integration with projection (1-lambda*cbar*c)
+	    if len(sop) == 0:
+	       assert abs(fac-1.0)<1.e-10
+	       zsite[l,u,d,r,b,t] = lam
+	    else:
+	       if sop == ['c','cbar']:
+	          zsite[l,u,d,r,b,t] = fac
+	       elif sop == ['cbar','c']:
+	          zsite[l,u,d,r,b,t] = -fac
+	       else:
+	 	  print 'no such case!'
+		  exit(1)
+	    print ' idx=',idx,' l,u,d,r,b,t=',(l,u,d,r,b,t),\
+		  ' fac=',fac,' sop=',sop,' parity=',parity,' zsite=',zsite[l,u,d,r,b,t]
+   return zsite
 
 if __name__ == '__main__':
    print '\nGenerate nonzero elements for 1D:'
@@ -126,8 +168,15 @@ if __name__ == '__main__':
 		     [0.,0., 0.,0.],
 		     [0.,0., 0.,0.]])
    print '\ndiff_C1=',numpy.linalg.norm(tmp1-tmp2)
+   
    print '\nGenerate nonzero elements for 2D:'
    genZSite2D(lam,0)
    genZSite2D(lam,1)
    genZSite2D(lam,2)
    genZSite2D(lam,3)
+   
+   print '\nGenerate nonzero elements for 3D:'
+   genZSite3D(lam,0)
+   genZSite3D(lam,1)
+   genZSite3D(lam,2)
+   genZSite3D(lam,3)

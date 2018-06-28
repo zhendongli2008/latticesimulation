@@ -16,7 +16,7 @@ def binarySearch(zpeps,auxbond,maxsteps=50,erange=30,iprt=0):
    a = 0.0
    # try scale from 1/|MaxVal|
    scale = 1.0/numpy.max(map(lambda x:numpy.max(x),zpeps.flatten()))
-   b = max(2.0*scale,1.0)
+   b = max(2.0*scale,10.0)
    zpeps_try = zpeps*scale
    istep = 0
    while True:

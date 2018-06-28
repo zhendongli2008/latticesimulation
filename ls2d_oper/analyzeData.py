@@ -11,5 +11,5 @@ mass2lst = genFit.genMass2lst(mass2c,50,28)
 
 info = [dirname,ng,n,center,mass2lst]
 genFit.checkData(info,iop=0,thresh=20.0)
-genFit.fitCoulomb(info,k=10,nselect=15,ifplot=True,\
+genFit.fitCoulomb(info,k=10,ifplot=True,nselect=28,\
 		  skiplst=[])

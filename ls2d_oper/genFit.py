@@ -131,14 +131,34 @@ def fitCoulomb(info,k=None,nselect=10,ifplot=False,skiplst=[]):
    # Start fitting
    amat = numpy.vstack(map(lambda x:coeff[x[0],x[1]],fmm))
    bvec = 1.0/dxy
-   qa,ra,pa = scipy.linalg.qr(amat,pivoting=True)
-   print 'amat.shape=',amat.shape
+   numpy.save('amat',amat)
+   numpy.save('bvec',bvec)
+   print amat.shape
+   print bvec.shape
+   # Adding weights
+   pw = 1.5
+   wt = dxy**pw
+   atmp = numpy.einsum('p,ps->ps',wt,amat)
+   btmp = numpy.einsum('p,p->p',wt,bvec)
+
+   qa,ra,pa = scipy.linalg.qr(atmp,pivoting=True)
+   print 'atmp.shape=',atmp.shape
    print 'pa=',pa
    print 'Rd=',numpy.diag(ra)
    for nterm in range(terms,0,-1):
       cols = pa[:nterm]
-      clst = scipy.linalg.pinv(amat[:,cols]).dot(bvec)
-      errs = abs(amat[:,cols].dot(clst)-bvec)
+      # Solver
+      clst = scipy.linalg.pinv(atmp[:,cols]).dot(btmp)
+      
+      nparams = nterm
+      lb = -numpy.inf
+      ub = numpy.inf
+      bnds = (numpy.array([lb]*nparams),numpy.array([ub]*nparams))
+      clst = scipy.optimize.lsq_linear(atmp[:,cols],btmp,\
+		      		       bounds=bnds,method='bvls').x
+      
+      print "CLST=",clst
+      errs = abs(atmp[:,cols].dot(clst)-btmp)
       print 'nterm=',nterm,' err_max=',numpy.max(errs),\
 		           ' err_av=',numpy.mean(abs(errs)),\
 			   ' |c|_max=',numpy.max(abs(clst))
@@ -213,6 +233,29 @@ def fitCoulomb(info,k=None,nselect=10,ifplot=False,skiplst=[]):
       plt.ylabel('sgn(c)*log10|c|')
       plt.savefig('fitCoulombClst.pdf')
       plt.show()
+
+      # GridPlot for errors
+      rr = 5
+      dist = exact2d.distance(n,m,m)
+      vij = 1/dist
+      vci = numpy.zeros((n,n))
+      for i in range(len(clst_final)):
+         vci += coeff[indx_final[i]]*clst_final[i]
+      vdiff = vci[m-rr:m+rr+1,m-rr:m+rr+1] \
+	    - vij[m-rr:m+rr+1,m-rr:m+rr+1]
+      vdiff[rr,rr] = 0.0
+      print vdiff.shape
+      from matplotlib import cm
+      fig = plt.figure(figsize=(5,3))
+      im = plt.imshow(vdiff,interpolation='nearest',cmap=cm.bwr,\
+		      vmin=-0.03,vmax=0.03)
+      plt.xticks([])
+      plt.yticks([])
+      cbar_ax = fig.add_axes([0.8, 0.15, 0.05, 0.7]) 
+      fig.colorbar(im, cax=cbar_ax)
+      plt.savefig('err_grid.pdf')
+      plt.show()
+
    # Save
    f = h5py.File(dirname+'/fitCoulomb.h5','w')
    f['indx_final'] = indx_final
