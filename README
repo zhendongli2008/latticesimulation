@@ -1,0 +1,11 @@
+Some explanation of the codes:
+
+ * ls1d    -	1D simulation tools
+
+ * ls2d    -	2D operators by fitting 1/r on lattice
+   * opt_simple	 - optimization tools
+   * lr_test	 - long-range Heisenberg model
+   * lr_test_mpi - long-range Heisenberg model (MPI)
+
+ * ls3d    - 	fermionic correlation functions as TNS
+ 
