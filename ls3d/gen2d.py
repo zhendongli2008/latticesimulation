@@ -6,7 +6,7 @@ import scipy.linalg
 from latticesimulation.ls2d import contraction2d
 import genSite
 
-def initialization(n,mass2=1.0,iprt=0,auxbond=20):
+def initialization(n,mass2=1.0,iprt=0,auxbond=20,guess=None):
    print '\n[gen2d.initialization] n=',n,' mass2=',mass2
    # Construct Z=tr(T) 
    # Shape:
@@ -34,7 +34,7 @@ def initialization(n,mass2=1.0,iprt=0,auxbond=20):
       zpeps[n-1,j] = tint[:,:1,:,:].copy()
       zpeps[j,n-1] = tint[:,:,:,:1].copy()
    # Compute scaling factor
-   scale,z = contraction2d.binarySearch(zpeps,auxbond,iprt=iprt)
+   scale,z = contraction2d.binarySearch(zpeps,auxbond,iprt=iprt,guess=guess)
    # Local terms
    local2  = scale*genSite.genZSite2D(lam,1)
    local1a = scale*genSite.genZSite2D(lam,2)

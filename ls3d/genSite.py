@@ -33,7 +33,7 @@ def screening(op):
 
 # For partition function Z1d
 def genZSite1D(lam,iop):
-   print '\n[nnz.genZSite1D] iop=',iop
+   print '\n[genSite.genZSite1D] iop=',iop
    zsite = numpy.zeros((4,4))
    idx = 0
    for l in range(4):
@@ -67,7 +67,7 @@ def genZSite1D(lam,iop):
 
 # For partition function Z2d
 def genZSite2D(lam,iop):
-   print '\n[nnz.genZSite2D] iop=',iop
+   print '\n[genSite.genZSite2D] iop=',iop
    zsite = numpy.zeros((4,4,4,4))
    idx = 0
    for l in range(4):
@@ -106,7 +106,7 @@ def genZSite2D(lam,iop):
 
 # For partition function Z3d
 def genZSite3D(lam,iop):
-   print '\n[nnz.genZSite3D] iop=',iop
+   print '\n[genSite.genZSite3D] iop=',iop
    zsite = numpy.zeros((4,4,4,4,4,4)) # ludrbt
    idx = 0
    for l in range(4):

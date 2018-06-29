@@ -9,13 +9,17 @@ import mps
 #	       If this does not work, additional code needs to be applied
 #	       to search the initial boundary points - b.
 #
-def binarySearch(zpeps,auxbond,maxsteps=50,erange=30,iprt=0):
+def binarySearch(zpeps,auxbond,maxsteps=50,erange=30,iprt=0,guess=None):
    shape = zpeps.shape
    pwr = -1.0/numpy.prod(shape) 
    if iprt>0: print '\n[binarySearch] shape=',shape,'auxbond=',auxbond
    a = 0.0
    # try scale from 1/|MaxVal|
-   scale = 1.0/numpy.max(map(lambda x:numpy.max(x),zpeps.flatten()))
+   if guess == None:
+      scale = 1.0/numpy.max(map(lambda x:numpy.max(x),zpeps.flatten()))
+   else:
+      print ' initial guess for scale =',guess
+      scale = guess
    b = max(2.0*scale,10.0)
    zpeps_try = zpeps*scale
    istep = 0
@@ -37,6 +41,7 @@ def binarySearch(zpeps,auxbond,maxsteps=50,erange=30,iprt=0):
 	 if abs(z-1.0)<1.e-10:
 	    if iprt>0: print ' converged scale=',scale,'z=',z
 	    break
+	 # eps needs to be very small (just crude result for scale is ok?) 
          if abs(b-a) < 1.e-10:
  	    print ' No good solution exists',scale,'z=',z
             break
