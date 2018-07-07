@@ -92,6 +92,7 @@ def contract(cpeps,auxbond=None):
       cmpo = [None]*n
       for j in range(n):
          cmpo[j] = cpeps[i,j]
+      #print 'i=',i
       cmps0 = mpo_mapply(cmpo,cmps0)
       if auxbond is not None: # compress
          cmps0 = mps.compress(cmps0,auxbond)
@@ -104,7 +105,8 @@ def mpo_mapply(mpo,mps):
     if len(mps[0].shape)==3: 
         # mpo x mps
         for i in xrange(nsites):
-            assert mpo[i].shape[2]==mps[i].shape[1]
+            #print '  j=',i,mpo[i].shape[2],mps[i].shape[1]
+	    assert mpo[i].shape[2]==mps[i].shape[1]
             mt=numpy.einsum("apqb,cqd->acpbd",mpo[i],mps[i])
             mt=numpy.reshape(mt,[mpo[i].shape[0]*mps[i].shape[0],mpo[i].shape[1],
                              mpo[i].shape[-1]*mps[i].shape[-1]])

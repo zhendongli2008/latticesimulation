@@ -5,30 +5,193 @@ import numpy
 import scipy.linalg
 import genSite
 from latticesimulation.ls2d import contraction2d
+import h5py
 
+# Six directions for boundary
+#    u t
+#     \|
+# l ---*--- r
+#      |\
+#      b d
+l = 1; r = 1; u = 1; d = 1; t=1; b = 1
+
+# Generic block structure (reference is I0)
+def gen_block(n,tint):
+   zblock = numpy.empty((n,n), dtype=numpy.object)
+   iden = numpy.identity(4)
+   swap = numpy.einsum('i,j->ij',[0,1,1,0],[0,1,1,0])
+   swap = (-1.0)**swap
+   Tswp = numpy.einsum('lr,ud,ul->ludr',iden,iden,swap)
+   # lower half
+   for i in range(1,n):
+      for j in range(0,i):
+         zblock[i,j] = Tswp
+   # upper+1 half 	
+   for i in range(n-1):
+      for j in range(i+2,n):
+         zblock[i,j] = Tswp
+   # diagonal
+   tmp = tint.transpose(0,1,5,4,3,2) # ludrbt->l,(u,t),b,(r,d)
+   for i in range(n):
+      zblock[i,i] = tmp.copy()
+   # upper diagonal
+   tmp = numpy.einsum('xy,ludr->lxuydr',iden,Tswp)
+   for i in range(n-1):
+      zblock[i,i+1] = tmp.copy()
+   # reference graph taken as I0
+   zblock[0,0] = zblock[0,0][:,:u,:,:,:,:].copy()
+   zblock[n-1,n-1] = zblock[n-1,n-1][:,:,:,:,:,:d].copy()
+   return zblock
+
+# Merge rank-6 into rank-4 tensors
+def merging(zmat0):
+   zmat = zmat0.copy()
+   n = zmat.shape[0]
+   # diagonal
+   for i in range(n):
+      s = zmat[i,i].shape
+      tmp = zmat[i,i].reshape(s[0],s[1]*s[2],s[3],s[4]*s[5])
+      zmat[i,i] = tmp.copy()
+   # upper-diagonal
+   for i in range(n-1):
+      s = zmat[i,i+1].shape
+      tmp = zmat[i,i+1].reshape(s[0]*s[1],s[2],s[3]*s[4],s[5])
+      zmat[i,i+1] = tmp.copy()
+   return zmat
+
+# Treat special parts in each case
+#
 # C1-E1-C2
 # |  |  |
 # E2-I0-E3
 # |  |  | 
 # C3-E4-C4
-def gen_c1(info):
-   return numpy.ones((1,1,1,1))
-def gen_c2(info):
-   return numpy.ones((1,1,1,1))
-def gen_c3(info):
-   return numpy.ones((1,1,1,1))
-def gen_c4(info):
-   return numpy.ones((1,1,1,1))
-def gen_e1(info):
-   return numpy.ones((1,1,1,1))
-def gen_e2(info):
-   return numpy.ones((1,1,1,1))
-def gen_e3(info):
-   return numpy.ones((1,1,1,1))
-def gen_e4(info):
-   return numpy.ones((1,1,1,1))
-def gen_i0(info):
-   return numpy.ones((1,1,1,1))
+def gen_i0(zblock):
+   zmat = zblock.copy()
+   return merging(zmat)
+
+def gen_e1(zblock):
+   zmat = zblock.copy()
+   n = zblock.shape[0]
+   # diagonal
+   for i in range(n):
+      zmat[i,i] = zmat[i,i][:,:,:t,:,:,:].copy()
+   # upper-diagonal
+   for i in range(n-1):
+      zmat[i,i+1] = zmat[i,i+1][:,:,:u,:,:d,:].copy()
+   # upper+1 half 	
+   for i in range(n-1):
+      for j in range(i+2,n):
+         zmat[i,j] = zmat[i,j][:,:u,:d,:].copy()
+   return merging(zmat)
+
+def gen_e3(zblock):
+   zmat = zblock.copy()
+   n = zblock.shape[0]
+   # diagonal 
+   for i in range(n):
+      zmat[i,i] = zmat[i,i][:,:,:,:,:r,:].copy()
+   # upper-diagonal
+   for i in range(n-1):
+      zmat[i,i+1] = zmat[i,i+1][:l,:,:,:,:,:r].copy()
+   # upper+1 half 	
+   for i in range(n-1):
+      for j in range(i+2,n):
+	 zmat[i,j] = zmat[i,j][:l,:,:,:r].copy()
+   return merging(zmat)
+
+def gen_e2(zblock):
+   zmat = zblock.copy()
+   n = zblock.shape[0]
+   # diagonal
+   for i in range(n):
+      zmat[i,i] = zmat[i,i][:l,:,:,:,:,:].copy()
+   # lower half   
+   for i in range(1,n):
+      for j in range(0,i):
+         zmat[i,j] = zmat[i,j][:l,:,:,:r].copy()
+   return merging(zmat)
+
+def gen_e4(zblock):
+   zmat = zblock.copy()
+   n = zblock.shape[0]
+   # diagonal
+   for i in range(n):
+      zmat[i,i] = zmat[i,i][:,:,:,:b,:,:].copy()
+   # lower half   
+   for i in range(1,n):
+      for j in range(0,i):
+         zmat[i,j] = zmat[i,j][:,:u,:d,:].copy()
+   return merging(zmat)
+
+# e1+e2
+def gen_c1(zblock):
+   zmat = zblock.copy()
+   n = zblock.shape[0]
+   # diagonal
+   for i in range(n):
+      zmat[i,i] = zmat[i,i][:l,:,:t,:,:,:].copy()
+   # upper-diagonal
+   for i in range(n-1):
+      zmat[i,i+1] = zmat[i,i+1][:,:,:u,:,:d,:].copy()
+   # upper+1 half 	
+   for i in range(n-1):
+      for j in range(i+2,n):
+         zmat[i,j] = zmat[i,j][:,:u,:d,:].copy()
+   # lower half   
+   for i in range(1,n):
+      for j in range(0,i):
+         zmat[i,j] = zmat[i,j][:l,:,:,:r].copy()
+   return merging(zmat)
+
+# e3+e4
+def gen_c4(zblock):
+   zmat = zblock.copy()
+   n = zblock.shape[0]
+   # diagonal 
+   for i in range(n):
+      zmat[i,i] = zmat[i,i][:,:,:,:b,:r,:].copy()
+   # upper-diagonal
+   for i in range(n-1):
+      zmat[i,i+1] = zmat[i,i+1][:l,:,:,:,:,:r].copy()
+   # upper+1 half 	
+   for i in range(n-1):
+      for j in range(i+2,n):
+	 zmat[i,j] = zmat[i,j][:l,:,:,:r].copy()
+   # lower half   
+   for i in range(1,n):
+      for j in range(0,i):
+         zmat[i,j] = zmat[i,j][:,:u,:d,:].copy()
+   return merging(zmat)
+
+# similar to e3
+def gen_c2(zblock):
+   zmat = zblock.copy()
+   n = zblock.shape[0]
+   # diagonal 
+   for i in range(n):
+      zmat[i,i] = zmat[i,i][:,:,:t,:,:r,:].copy()
+   # upper-diagonal
+   for i in range(n-1):
+      zmat[i,i+1] = zmat[i,i+1][:l,:,:u,:,:d,:r].copy()
+   # upper+1 half 	
+   for i in range(n-1):
+      for j in range(i+2,n):
+	 zmat[i,j] = numpy.ones(1).reshape(1,1,1,1)
+   return merging(zmat)
+
+# similar to e4
+def gen_c3(zblock):
+   zmat = zblock.copy()
+   n = zblock.shape[0]
+   # diagonal
+   for i in range(n):
+      zmat[i,i] = zmat[i,i][:l,:,:,:b,:,:].copy()
+   # lower half   
+   for i in range(1,n):
+      for j in range(0,i):
+         zmat[i,j] = numpy.ones(1).reshape(1,1,1,1)
+   return merging(zmat)
 
 def initialization(n,mass2=1.0,iprt=0,auxbond=20,guess=None):
    print '\n[gen2d.initialization] n=',n,' mass2=',mass2
@@ -38,36 +201,64 @@ def initialization(n,mass2=1.0,iprt=0,auxbond=20,guess=None):
    tint = genSite.genZSite3D(lam,0)
    zpeps = numpy.empty((n2,n2), dtype=numpy.object)
    # Prepare
-   info = [n,tint]
-   c1 = gen_c1(info)
-   c2 = gen_c2(info)
-   c3 = gen_c3(info)
-   c4 = gen_c4(info)
-   e1 = gen_e1(info)
-   e2 = gen_e2(info)
-   e3 = gen_e3(info)
-   e4 = gen_e4(info)
-   i0 = gen_i0(info)
-   # Corners
-   zpeps[:n,:n] = c1.copy()
-   zpeps[:n,n2-n:n2] = c2.copy()
-   zpeps[n2-n:n2,:n] = c3.copy()
-   zpeps[n2-n:n2,n2-n:n2] = c4.copy()
-   # Edges
-   for j in range(1,n-1):
-      zpeps[:n,j*n:(j+1)*n] = e1.copy()
-   for j in range(1,n-1):
-      zpeps[n2-n:n2,j*n:(j+1)*n] = e4.copy()
-   for i in range(1,n-1):
-      zpeps[i*n:(i+1)*n,:n] = e2.copy()
-   for i in range(1,n-1):
-      zpeps[i*n:(i+1)*n,n2-n:n2] = e3.copy()
-   # Inner
-   for i in range(1,n-1):
-      for j in range(1,n-1):
-	 zpeps[i*n:(i+1)*n,j*n:(j+1)*n] = i0.copy()
+   zblock = gen_block(n,tint)
+   i0 = gen_i0(zblock)
+   c1 = gen_c1(zblock)
+   c2 = gen_c2(zblock)
+   c3 = gen_c3(zblock)
+   c4 = gen_c4(zblock)
+   e1 = gen_e1(zblock)
+   e2 = gen_e2(zblock)
+   e3 = gen_e3(zblock)
+   e4 = gen_e4(zblock)
+   # Note that C3 is (0,0) 
+   # C1-E1-C2
+   # |  |  |
+   # E2-I0-E3
+   # |  |  | 
+   # C3-E4-C4
+   # New ordering:
+   # c3-e4-c4
+   for i in range(n):
+      for j in range(n):
+         zpeps[i,j] = c3[n-1-i,j].copy()
+   for i in range(n):
+     for k in range(1,n-1): 
+       for j in range(n):
+         zpeps[i,j+k*n] = e4[n-1-i,j].copy()
+   for i in range(n):
+      for j in range(n):
+         zpeps[i,j+n2-n] = c4[n-1-i,j].copy()
+   # e2-i0-e3
+   for j in range(n):
+     for k in range(1,n-1): 
+       for i in range(n):
+         zpeps[i+k*n,j] = e2[n-1-i,j].copy()
+   for l in range(1,n-1): 
+    for j in range(n):
+      for k in range(1,n-1): 
+        for i in range(n):
+         zpeps[i+k*n,j+l*n] = i0[n-1-i,j].copy()
+   for j in range(n):
+     for k in range(1,n-1): 
+       for i in range(n):
+         zpeps[i+k*n,j+n2-n] = e3[n-1-i,j].copy()
+   # c1-e1-c2
+   for i in range(n):
+      for j in range(n):
+         zpeps[i+n2-n,j] = c1[n-1-i,j].copy()
+   for i in range(n):
+     for k in range(1,n-1): 
+       for j in range(n):
+         zpeps[i+n2-n,j+k*n] = e1[n-1-i,j].copy()
+   for i in range(n):
+      for j in range(n):
+         zpeps[i+n2-n,j+n2-n] = c2[n-1-i,j].copy()
    # Compute scaling factor
    scale,z = contraction2d.binarySearch(zpeps,auxbond,iprt=iprt,guess=guess)
+   print
+   print 'scale=',scale,'n3d=',n,'Zphys=',1.0/scale**(n2**2)
+   print
    # Local terms
    local2  = scale*genSite.genZSite3D(lam,1)
    local1a = scale*genSite.genZSite3D(lam,2)
@@ -75,151 +266,147 @@ def initialization(n,mass2=1.0,iprt=0,auxbond=20,guess=None):
    zpeps = scale*zpeps
    return scale,zpeps,local2,local1a,local1b
 
+def tensor_dump(scale,zpeps,local2,local1a,local1b,fname='tensor'):
+   print '\n[gen3d.tensor_dump] fname=',fname
+   f = h5py.File(fname+'.h5','w')
+   n2 = zpeps.shape[0]
+   f['n2'] = n2
+   f['scale'] = scale
+   for i in range(n2): 
+      for j in range(n2): 
+         f['zpeps_'+str(i)+'_'+str(j)] = zpeps[i,j]
+   f['local2'] = local2
+   f['local1a'] = local1a
+   f['local1b'] = local1b
+   f.close()
+   return 0
+
+def tensor_load(fname='tensor'):
+   print '\n[gen3d.tensor_load] fname=',fname
+   f = h5py.File(fname+'.h5','r')
+   n2 = f['n2'].value
+   scale = f['scale'].value
+   n = int(numpy.sqrt(n2))
+   print ' n,n2=',(n,n2)
+   print ' scale=',scale,'n3d=',n,'Zphys=',1.0/scale**(n2**2)
+   zpeps = numpy.empty((n2,n2), dtype=numpy.object)
+   for i in range(n2):
+      for j in range(n2):
+         zpeps[i,j] = f['zpeps_'+str(i)+'_'+str(j)].value
+   local2 = f['local2'].value
+   local1a = f['local1a'].value
+   local1b = f['local1b'].value
+   f.close()
+   return scale,zpeps,local2,local1a,local1b 
+
+# Z-direction
+def test_zdir(n,scale,zpeps,local2,local1a,local1b,off=1):
+   print '\n[test_zdir] A/B=',(m+m*n,m+m*n),(m+(m+off)*n,m+m*n)
+   epeps = zpeps.copy()
+   # c
+   s = local1a.shape
+   tmp = local1a.reshape(s[0],s[1]*s[2],s[3],s[4]*s[5])
+   epeps[m+m*n,m+m*n] = tmp.copy()
+   # cbar
+   s = local1b.shape
+   tmp = local1b.reshape(s[0],s[1]*s[2],s[3],s[4]*s[5])
+   epeps[m+(m+off)*n,m+m*n]= tmp.copy()
+   # z-path
+   vp = [1,-1,-1,1]
+   for i in range(m+m*n+1,m+(m+off)*n+1):
+      tmp = epeps[i,m+m*n].copy()
+      s = tmp.shape
+      if s[0] == 4:
+         epeps[i,m+m*n] = numpy.einsum('ludr,l->ludr',tmp,vp)
+      elif s[0] == 16:
+         sp = numpy.einsum('i,j->ij',vp,vp)
+         sp = sp.reshape(16)
+	 epeps[i,m+m*n] = numpy.einsum('ludr,l->ludr',tmp,sp)
+      else:
+         print 'error'
+	 exit()
+      print ' zcoord=',(i,m+m*n),' bond=',s[0]
+   val = contraction2d.contract(epeps,auxbond)
+   return val
+
+# D-direction
+def test_ddir(n,scale,zpeps,local2,local1a,local1b,off=1):
+   print '\n[test_ddir] A/B=',(m+m*n,m+m*n),(m+(m+off)*n,m+(m+off)*n)
+   epeps = zpeps.copy()
+   # c
+   s = local1a.shape
+   tmp = local1a.reshape(s[0],s[1]*s[2],s[3],s[4]*s[5])
+   epeps[m+m*n,m+m*n] = tmp.copy()
+   # cbar
+   s = local1b.shape
+   tmp = local1b.reshape(s[0],s[1]*s[2],s[3],s[4]*s[5])
+   epeps[m+(m+off)*n,m+(m+off)*n]= tmp.copy()
+   # z-path
+   vp = [1,-1,-1,1]
+   for i in range(m+m*n+1,m+(m+off)*n+1):
+      tmp = epeps[i,m+m*n].copy()
+      s = tmp.shape
+      if s[0] == 4:
+         epeps[i,m+m*n] = numpy.einsum('ludr,l->ludr',tmp,vp)
+      elif s[0] == 16:
+         sp = numpy.einsum('i,j->ij',vp,vp)
+         sp = sp.reshape(16)
+	 epeps[i,m+m*n] = numpy.einsum('ludr,l->ludr',tmp,sp)
+      else:
+         print 'error'
+	 exit()
+      print ' zcoord=',(i,m+m*n),' bond=',s[0]
+   # h-path
+   for j in range(m+m*n,m+(m+off)*n):
+      tmp = epeps[m+(m+off)*n,j].copy()
+      s = tmp.shape
+      if s[1] == 4:
+         epeps[m+(m+off)*n,j] = numpy.einsum('ludr,u->ludr',tmp,vp)
+      elif s[1] == 16:
+         sp = numpy.einsum('i,j->ij',vp,vp)
+         sp = sp.reshape(16)
+	 epeps[m+(m+off)*n,j] = numpy.einsum('ludr,u->ludr',tmp,sp)
+      else:
+         print 'error'
+	 exit()
+      print ' hcoord=',(m+(m+off)*n,j),' bond=',s[0]
+   val = contraction2d.contract(epeps,auxbond)
+   return val
+
 
 if __name__ == '__main__':
-   m = 4
+   m = 2
    n = 2*m+1
-   mass2 = 0.2
+   n2 = n**2
+   mass2 = 1.0
    iprt = 1
    auxbond = 40
+ 
+   from latticesimulation.ls2d import exact2d
+   mass = numpy.sqrt(mass2)
+   t3d = exact2d.genT3d(n,mass)
+   t3d = t3d.reshape((n**3,n**3))
+   det = scipy.linalg.det(t3d)
+   tinv = scipy.linalg.inv(t3d)
+   tinv = tinv.reshape((n,n,n,n,n,n))
+   print '\nTest Z with mass =',mass
+   print 'direct detM=',det,' scale0=',pow(det,-1.0/n**3)
+   print tinv[m,m,m,m+1,m,m]
+   print tinv[m,m,m,m,m+1,m]
+   print tinv[m,m,m,m,m,m+1]
+   print tinv[m,m,m,m+1,m+1,m+1]
 
-   result = initialization(n,mass2,iprt,auxbond)
-   scale,zpeps,local2,local1a,local1b = result
+   iop = 1
+   if iop == 0:
+      result = initialization(n,mass2,iprt,auxbond)
+      scale,zpeps,local2,local1a,local1b = result
+      tensor_dump(scale,zpeps,local2,local1a,local1b)
+   else:
+      scale,zpeps,local2,local1a,local1b = tensor_load()
 
-#   # Test Z:
-#   from latticesimulation.ls2d import exact2d
-#   t2d = exact2d.genT2d(n,numpy.sqrt(mass2))
-#   t2d = t2d.reshape((n*n,n*n))
-#   tinv = scipy.linalg.inv(t2d)
-#   tinv = tinv.reshape((n,n,n,n))
-#   print '\nTest Z:'
-#   print 'direct detM=',scipy.linalg.det(t2d)
-#   print 'scale=',scale,'Z=',numpy.power(1.0/scale,n*n)
-#
-#   print '\nTest local2:'
-#   v2a = tinv[0,0,0,0]
-#   v2b = tinv[0,1,0,1]
-#   v2c = tinv[m,m,m,m]
-#   print 'direct point=',(0,0),v2a 
-#   print 'direct point=',(0,1),v2b
-#   print 'direct point=',(m,m),v2c
-#
-#   for auxbond in [10,25,40]:
-#      epeps = zpeps.copy()
-#      epeps[0,0] = local2[:1,:,:1,:]
-#      val = contraction2d.contract(epeps,auxbond)
-#      print 'point=',(0,0),'auxbond=',auxbond,val,val-v2a
-#   for auxbond in [10,25,40]:
-#      epeps = zpeps.copy()
-#      epeps[0,1] = local2[:,:,:1,:]
-#      val = contraction2d.contract(epeps,auxbond)
-#      print 'point=',(0,1),'auxbond=',auxbond,val,val-v2b
-#   for auxbond in [10,25,40]:
-#      epeps = zpeps.copy()
-#      epeps[m,m] = local2[:,:,:,:]
-#      val = contraction2d.contract(epeps,auxbond)
-#      print 'point=',(m,m),'auxbond=',auxbond,val,val-v2c
-#   
-#   print '\nTest local1:'
-#   v1a = tinv[3,3,m-1,m-2]
-#   v1b = tinv[m,m,m+3,m-2]
-#   v1c = tinv[m,m,m+2,m]
-#   v1d = tinv[m,m,m,m+2]
-#   print 'direct point=',(3,3),(m-1,m-2),v1a
-#   print 'direct point=',(m,m),(m+3,m-2),v1b
-#   print 'direct point=',(m,m),(m+2,m)  ,v1c
-#   print 'direct point=',(m,m),(m,m+2)  ,v1d
-#
-#   print '\ncase-d: right'
-#   for auxbond in [10,25,40]:
-#      epeps = zpeps.copy()
-#      epeps[m,m] = local1a
-#      epeps[m,m+2] = local1b
-#      for j in range(m):
-#	 epeps[m,j] = numpy.einsum('ludr,u->ludr',epeps[m,j],[1,-1,-1,1])
-#      for j in range(m+2):
-#	 epeps[m,j] = numpy.einsum('ludr,u->ludr',epeps[m,j],[1,-1,-1,1])
-#      val = contraction2d.contract(epeps,auxbond)
-#      print 'point=',(m,m),(m,m+2),'auxbond=',auxbond,val,val-v1d
-#   # PATH
-#   for auxbond in [10,25,40]:
-#      epeps = zpeps.copy()
-#      epeps[m,m] = local1a
-#      epeps[m,m+2] = local1b
-#      for j in range(m,m+2):
-#	 epeps[m,j] = numpy.einsum('ludr,u->ludr',epeps[m,j],[1,-1,-1,1])
-#      val = contraction2d.contract(epeps,auxbond)
-#      print 'point=',(m,m),(m,m+2),'auxbond=',auxbond,val,val-v1d
-#
-#   print '\ncase-c: above'
-#   for auxbond in [10,25,40]:
-#      epeps = zpeps.copy()
-#      epeps[m,m] = local1a
-#      epeps[m+2,m] = local1b
-#      for j in range(m):
-#	 epeps[m,j] = numpy.einsum('ludr,u->ludr',epeps[m,j],[1,-1,-1,1])
-#      for j in range(m):
-#	 epeps[m+2,j] = numpy.einsum('ludr,u->ludr',epeps[m+2,j],[1,-1,-1,1])
-#      val = contraction2d.contract(epeps,auxbond)
-#      print 'point=',(m,m),(m+2,m),'auxbond=',auxbond,val,val-v1c
-#   # PATH
-#   for auxbond in [10,25,40]:
-#      epeps = zpeps.copy()
-#      epeps[m,m] = local1a
-#      epeps[m+2,m] = local1b
-#      for i in range(m+2,m,-1):
-#	 epeps[i,m] = numpy.einsum('ludr,l->ludr',epeps[i,m],[1,-1,-1,1])
-#      val = contraction2d.contract(epeps,auxbond)
-#      print 'point=',(m,m),(m+2,m),'auxbond=',auxbond,val,val-v1c
-#
-#   print '\ncase-a: upper-right'
-#   # Original
-#   for auxbond in [10,25,40]:
-#      epeps = zpeps.copy()
-#      epeps[3,3] = local1a
-#      epeps[m-1,m-2] = local1b
-#      assert m-2>3
-#      for j in range(3):
-#         epeps[3,j] = numpy.einsum('ludr,u->ludr',epeps[3,j],[1,-1,-1,1])
-#      for j in range(m-2):
-#	 epeps[m-1,j] = numpy.einsum('ludr,u->ludr',epeps[m-1,j],[1,-1,-1,1])
-#      val = contraction2d.contract(epeps,auxbond)
-#      print 'point=',(3,3),(m-1,m-2),'auxbond=',auxbond,val,val-v1a
-#   # PATH
-#   for auxbond in [10,25,40]:
-#      epeps = zpeps.copy()
-#      epeps[3,3] = local1a
-#      epeps[m-1,m-2] = local1b
-#      # Changes col
-#      for j in range(3,m-2):
-#	 epeps[m-1,j] = numpy.einsum('ludr,u->ludr',epeps[m-1,j],[1,-1,-1,1])
-#      # Changes row
-#      for i in range(m-1,3,-1):
-#	 epeps[i,3] = numpy.einsum('ludr,l->ludr',epeps[i,3],[1,-1,-1,1])
-#      val = contraction2d.contract(epeps,auxbond)
-#      print 'point=',(3,3),(m-1,m-2),'auxbond=',auxbond,val,val-v1a
-#
-#   print '\ncase-b: upper-left'
-#   for auxbond in [10,25,40]:
-#      epeps = zpeps.copy()
-#      epeps[m,m] = local1a
-#      epeps[m+3,m-2] = local1b
-#      for j in range(m):
-#         epeps[m,j] = numpy.einsum('ludr,u->ludr',epeps[m,j],[1,-1,-1,1])
-#      for j in range(m-2):
-#	 epeps[m+3,j] = numpy.einsum('ludr,u->ludr',epeps[m+3,j],[1,-1,-1,1])
-#      val = contraction2d.contract(epeps,auxbond)
-#      print 'point=',(m,m),(m+3,m-2),'auxbond=',auxbond,val,val-v1b
-#   # PATH
-#   for auxbond in [10,25,40]:
-#      epeps = zpeps.copy()
-#      epeps[m,m] = local1a
-#      epeps[m+3,m-2] = -local1b
-#      # Changes col
-#      for j in range(m-2,m):
-#	 epeps[m+3,j] = numpy.einsum('ludr,u->ludr',epeps[m+3,j],[1,-1,-1,1])
-#      # Changes row
-#      for i in range(m+3,m,-1):
-#	 epeps[i,m] = numpy.einsum('ludr,l->ludr',epeps[i,m],[1,-1,-1,1])
-#      val = contraction2d.contract(epeps,auxbond)
-#      print 'point=',(m,m),(m+3,m-2),'auxbond=',auxbond,val,val-v1b
+   val = contraction2d.contract(zpeps,auxbond)
+   print '\npart=',val
+   val = test_zdir(n,scale,zpeps,local2,local1a,local1b,off=1)
+   print '\nzdir=',val
+   val = test_ddir(n,scale,zpeps,local2,local1a,local1b,off=1)
+   print '\nddir=',val
