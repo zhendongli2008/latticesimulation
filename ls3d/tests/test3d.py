@@ -53,57 +53,44 @@ for idx,mass in enumerate([1.0,1.e-1,1.e-2,1.e-3]):
    plt.plot(x,1/x,'k--',label='1/r (reference)')
    plt.plot(x,y,'k-',label='Yukawa mass='+str(mass))
    tinv = tinv/a*fac
-   xh = numpy.arange(m+1)*a
-   plt.plot(xh,tinv[m,m,m][m,m,range(m,n)],'rx',
+   xz = numpy.arange(m+1)*a
+   yz = tinv[m,m,m][m,m,range(m,n)]
+   plt.plot(xz,yz,'rx',
 	 markeredgewidth=1,\
 	 markersize=10,linewidth=1,\
    	 label='z-direct: (m,m,n)-(m,m,m)')
    xd = numpy.arange(m+1)*a*numpy.sqrt(3)
-   plt.plot(xd,tinv[m,m,m][range(m,n),range(m,n),range(m,n)],'b+',
+   yd = tinv[m,m,m][range(m,n),range(m,n),range(m,n)]
+   plt.plot(xd,yd,'b+',
 	 markeredgewidth=1,\
 	 markersize=10,linewidth=1,\
    	 label='d-direct: (n,n,n)-(m,m,m)')
 
    plt.xlim(xmax=numpy.max(xd+1.0))
    plt.ylim(ymin=-0.1,ymax=1.2)
+  
+   #=================
+   # TNS Contraction 
+   #=================
+   iprt = 1
+   auxbond = 50
+   iop = 0
+   if iop == 0:
+      result = gen3d.initialization(n,mass**2,iprt,auxbond)
+      scale,zpeps,local2,local1a,local1b = result
+      gen3d.tensor_dump(scale,zpeps,local2,local1a,local1b)
+   else:
+      scale,zpeps,local2,local1a,local1b = gen3d.tensor_load()
+      zval = gen3d.test_zdir(m,n,scale,zpeps,local2,local1a,local1b,auxbond,off=1)
+      print
+      print 'zval0=',yz[1:]
+      print 'zval1=',zval,zval*fac
+      dval = gen3d.test_ddir(m,n,scale,zpeps,local2,local1a,local1b,auxbond,off=1)
+      print
+      print 'dval0=',yd[1:]
+      print 'dval1=',dval,dval*fac
+   exit()
 
 # final   
 #plt.legend()
 plt.show()
-
-#=================
-# TNS Contraction 
-#=================
-auxbond = 100
-result = gen3d.initialization(n,mass**2,iprt,auxbond)
-scale,zpeps0,zpeps,local2,local1a,local1b = result
-print '\nTest Z:'
-print 'direct detM=',scipy.linalg.det(t3d)
-print 'scale=',scale,'Z=',numpy.power(1.0/scale,n*n*n)
-print 'tr(T)=',contraction3d.contract(zpeps0,auxbond)
-exit()
-
-#
-#for i in range(n):
-# for j in range(n):
-#  for k in range(n):
-#     epeps3d = zpeps.copy()
-#     s = epeps3d[i,j,k].shape
-#     epeps3d[i,j,k] = local2[:s[0],:s[1],:s[2],:s[3],:s[4],:s[5]]
-#     print '(i,j,k)=',(i,j,k),contraction3d.contract(epeps3d,auxbond),\
-#	       tinv[i,j,k,i,j,k]
-
-# PATH
-for auxbond in [10,25,40]:
-   epeps = zpeps.copy()
-   epeps[m,m] = local1a
-   epeps[m+3,m-2] = -local1b
-   # Changes col
-   for j in range(m-2,m):
-      epeps[m+3,j] = numpy.einsum('ludr,u->ludr',epeps[m+3,j],[1,-1,-1,1])
-   # Changes row
-   for i in range(m+3,m,-1):
-      epeps[i,m] = numpy.einsum('ludr,l->ludr',epeps[i,m],[1,-1,-1,1])
-   val = contraction2d.contract(epeps,auxbond)
-   print 'point=',(m,m),(m+3,m-2),'auxbond=',auxbond,val,val-v1b
-

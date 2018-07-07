@@ -194,7 +194,7 @@ def gen_c3(zblock):
    return merging(zmat)
 
 def initialization(n,mass2=1.0,iprt=0,auxbond=20,guess=None):
-   print '\n[gen2d.initialization] n=',n,' mass2=',mass2
+   print '\n[gen3d.initialization] n=',n,' mass2=',mass2
    # Interior
    n2 = n**2
    lam = 6.0+mass2
@@ -263,6 +263,10 @@ def initialization(n,mass2=1.0,iprt=0,auxbond=20,guess=None):
    local2  = scale*genSite.genZSite3D(lam,1)
    local1a = scale*genSite.genZSite3D(lam,2)
    local1b = scale*genSite.genZSite3D(lam,3)
+   # convert to preorder
+   local2  = local2.transpose(0,1,5,4,3,2).copy()  # ludrbt->l,(u,t),b,(r,d)
+   local1a = local1a.transpose(0,1,5,4,3,2).copy() # ludrbt->l,(u,t),b,(r,d)
+   local1b = local1b.transpose(0,1,5,4,3,2).copy() # ludrbt->l,(u,t),b,(r,d)
    zpeps = scale*zpeps
    return scale,zpeps,local2,local1a,local1b
 
@@ -300,87 +304,137 @@ def tensor_load(fname='tensor'):
    return scale,zpeps,local2,local1a,local1b 
 
 # Z-direction
-def test_zdir(n,scale,zpeps,local2,local1a,local1b,off=1):
-   print '\n[test_zdir] A/B=',(m+m*n,m+m*n),(m+(m+off)*n,m+m*n)
+def test_zdir(m,n,scale,zpeps,local2,local1a,local1b,auxbond,off=1):
+   x0,y0 = m+m*n,m+m*n
+   x1,y1 = m+(m+off)*n,m+m*n
+   print '\n[test_zdir] A/B=',(x0,y0),(x1,y1)
    epeps = zpeps.copy()
    # c
    s = local1a.shape
    tmp = local1a.reshape(s[0],s[1]*s[2],s[3],s[4]*s[5])
-   epeps[m+m*n,m+m*n] = tmp.copy()
+   epeps[x0,y0] = tmp.copy()
    # cbar
    s = local1b.shape
    tmp = local1b.reshape(s[0],s[1]*s[2],s[3],s[4]*s[5])
-   epeps[m+(m+off)*n,m+m*n]= tmp.copy()
+   epeps[x1,y1]= tmp.copy()
    # z-path
    vp = [1,-1,-1,1]
-   for i in range(m+m*n+1,m+(m+off)*n+1):
-      tmp = epeps[i,m+m*n].copy()
+   for i in range(x0+1,x1+1):
+      tmp = epeps[i,y0].copy()
       s = tmp.shape
       if s[0] == 4:
-         epeps[i,m+m*n] = numpy.einsum('ludr,l->ludr',tmp,vp)
+         epeps[i,y0] = numpy.einsum('ludr,l->ludr',tmp,vp)
       elif s[0] == 16:
          sp = numpy.einsum('i,j->ij',vp,vp)
          sp = sp.reshape(16)
-	 epeps[i,m+m*n] = numpy.einsum('ludr,l->ludr',tmp,sp)
+	 epeps[i,y0] = numpy.einsum('ludr,l->ludr',tmp,sp)
       else:
          print 'error'
 	 exit()
-      print ' zcoord=',(i,m+m*n),' bond=',s[0]
+      print ' zcoord=',(i,y0),' bond=',s[0]
    val = contraction2d.contract(epeps,auxbond)
    return val
 
 # D-direction
-def test_ddir(n,scale,zpeps,local2,local1a,local1b,off=1):
-   print '\n[test_ddir] A/B=',(m+m*n,m+m*n),(m+(m+off)*n,m+(m+off)*n)
+def test_ddir(m,n,scale,zpeps,local2,local1a,local1b,auxbond,off=1):
+   x0,y0 = m+m*n,m+m*n
+   x1,y1 = (m+(m+off)*n,m+(m+off)*n)
+   print '\n[test_ddir] A/B=',(x0,y0),(x1,y1)
    epeps = zpeps.copy()
    # c
    s = local1a.shape
    tmp = local1a.reshape(s[0],s[1]*s[2],s[3],s[4]*s[5])
-   epeps[m+m*n,m+m*n] = tmp.copy()
+   epeps[x0,y0] = tmp.copy()
    # cbar
    s = local1b.shape
    tmp = local1b.reshape(s[0],s[1]*s[2],s[3],s[4]*s[5])
-   epeps[m+(m+off)*n,m+(m+off)*n]= tmp.copy()
+   epeps[x1,y1]= tmp.copy()
    # z-path
    vp = [1,-1,-1,1]
-   for i in range(m+m*n+1,m+(m+off)*n+1):
-      tmp = epeps[i,m+m*n].copy()
+   for i in range(x0+1,x1+1):
+      tmp = epeps[i,y0].copy()
       s = tmp.shape
       if s[0] == 4:
-         epeps[i,m+m*n] = numpy.einsum('ludr,l->ludr',tmp,vp)
+         epeps[i,y0] = numpy.einsum('ludr,l->ludr',tmp,vp)
       elif s[0] == 16:
          sp = numpy.einsum('i,j->ij',vp,vp)
          sp = sp.reshape(16)
-	 epeps[i,m+m*n] = numpy.einsum('ludr,l->ludr',tmp,sp)
+	 epeps[i,y0] = numpy.einsum('ludr,l->ludr',tmp,sp)
       else:
          print 'error'
 	 exit()
-      print ' zcoord=',(i,m+m*n),' bond=',s[0]
+      print ' zcoord=',(i,y0),' bond=',s[0]
    # h-path
-   for j in range(m+m*n,m+(m+off)*n):
-      tmp = epeps[m+(m+off)*n,j].copy()
+   for j in range(y0,y1):
+      tmp = epeps[x1,j].copy()
       s = tmp.shape
       if s[1] == 4:
-         epeps[m+(m+off)*n,j] = numpy.einsum('ludr,u->ludr',tmp,vp)
+         epeps[x1,j] = numpy.einsum('ludr,u->ludr',tmp,vp)
       elif s[1] == 16:
          sp = numpy.einsum('i,j->ij',vp,vp)
          sp = sp.reshape(16)
-	 epeps[m+(m+off)*n,j] = numpy.einsum('ludr,u->ludr',tmp,sp)
+	 epeps[x1,j] = numpy.einsum('ludr,u->ludr',tmp,sp)
       else:
          print 'error'
 	 exit()
-      print ' hcoord=',(m+(m+off)*n,j),' bond=',s[0]
+      print ' hcoord=',(x1,j),' bond=',s[1]
    val = contraction2d.contract(epeps,auxbond)
    return val
 
+# D-direction
+def test_ddir3(m,n,scale,zpeps,local2,local1a,local1b,auxbond,off=1):
+   x0,y0 = m+m*n,m+m*n
+   x1,y1 = (m+off+(m+off)*n,m-off+(m+off)*n)
+   print '\n[test_ddir3] A/B=',(x0,y0),(x1,y1)
+   epeps = zpeps.copy()
+   # c
+   s = local1a.shape
+   tmp = local1a.reshape(s[0],s[1]*s[2],s[3],s[4]*s[5])
+   epeps[x0,y0] = tmp.copy()
+   # cbar
+   s = local1b.shape
+   tmp = local1b.reshape(s[0],s[1]*s[2],s[3],s[4]*s[5])
+   epeps[x1,y1]= tmp.copy()
+   # z-path
+   vp = [1,-1,-1,1]
+   for i in range(x0+1,x1+1):
+      tmp = epeps[i,y0].copy()
+      s = tmp.shape
+      if s[0] == 4:
+         epeps[i,y0] = numpy.einsum('ludr,l->ludr',tmp,vp)
+      elif s[0] == 16:
+         sp = numpy.einsum('i,j->ij',vp,vp)
+         sp = sp.reshape(16)
+	 epeps[i,y0] = numpy.einsum('ludr,l->ludr',tmp,sp)
+      else:
+         print 'error'
+	 exit()
+      print ' zcoord=',(i,y0),' bond=',s[0]
+   # h-path
+   for j in range(y0,y1):
+      tmp = epeps[x1,j].copy()
+      s = tmp.shape
+      if s[1] == 4:
+         epeps[x1,j] = numpy.einsum('ludr,u->ludr',tmp,vp)
+      elif s[1] == 16:
+         sp = numpy.einsum('i,j->ij',vp,vp)
+         sp = sp.reshape(16)
+	 epeps[x1,j] = numpy.einsum('ludr,u->ludr',tmp,sp)
+      else:
+         print 'error'
+	 exit()
+      print ' hcoord=',(x1,j),' bond=',s[1]
+   val = contraction2d.contract(epeps,auxbond)
+   return val
 
 if __name__ == '__main__':
    m = 2
    n = 2*m+1
    n2 = n**2
    mass2 = 1.0
+   iop = 1
    iprt = 1
-   auxbond = 40
+   auxbond = 50
  
    from latticesimulation.ls2d import exact2d
    mass = numpy.sqrt(mass2)
@@ -394,19 +448,23 @@ if __name__ == '__main__':
    print tinv[m,m,m,m+1,m,m]
    print tinv[m,m,m,m,m+1,m]
    print tinv[m,m,m,m,m,m+1]
+   print tinv[m,m,m,m,m+1,m+1]
+   print tinv[m,m,m,m+1,m,m+1]
+   print tinv[m,m,m,m+1,m+1,m]
    print tinv[m,m,m,m+1,m+1,m+1]
+   print tinv[m,m,m,m-1,m-1,m-1]
 
-   iop = 1
    if iop == 0:
       result = initialization(n,mass2,iprt,auxbond)
       scale,zpeps,local2,local1a,local1b = result
       tensor_dump(scale,zpeps,local2,local1a,local1b)
    else:
       scale,zpeps,local2,local1a,local1b = tensor_load()
-
-   val = contraction2d.contract(zpeps,auxbond)
-   print '\npart=',val
-   val = test_zdir(n,scale,zpeps,local2,local1a,local1b,off=1)
-   print '\nzdir=',val
-   val = test_ddir(n,scale,zpeps,local2,local1a,local1b,off=1)
-   print '\nddir=',val
+      val = contraction2d.contract(zpeps,auxbond)
+      print '\npart=',val
+      val = test_zdir(m,n,scale,zpeps,local2,local1a,local1b,auxbond,off=1)
+      print '\nzdir=',val
+      val = test_ddir(m,n,scale,zpeps,local2,local1a,local1b,auxbond,off=1)
+      print '\nddir=',val
+      val = test_ddir3(m,n,scale,zpeps,local2,local1a,local1b,auxbond,off=1)
+      print '\nddir=',val

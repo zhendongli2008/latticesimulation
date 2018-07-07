@@ -1,0 +1,64 @@
+
+*** Test result for gen3d (20180707) ***
+
+AUXBOND = 50
+
+Test Z with mass = 1.0
+direct detM= 3.45340084118e+102  scale0= 0.151249526621
+0.0319944450379
+0.0319944450379
+0.0319944450379
+0.0117966639706
+0.0117966639706
+0.0117966639706
+0.00592885375494
+0.00592885375494
+
+>>> zdir= 0.0320005031982
+>>> ddir= 0.0118067342273
+>>> ddir= 0.00593538650083
+
+[gen3d.tensor_load] fname= tensor
+ n,n2= (5, 25)
+ scale= 0.685391140879 n3d= 5 Zphys= 3.45498271015e+102
+
+part= 0.999999975939
+
+[test_zdir] A/B= (12, 12) (17, 12)
+ zcoord= (13, 12)  bond= 16
+ zcoord= (14, 12)  bond= 4
+ zcoord= (15, 12)  bond= 4
+ zcoord= (16, 12)  bond= 4
+ zcoord= (17, 12)  bond= 4
+
+zdir= 0.0320005031982
+
+[test_ddir] A/B= (12, 12) (17, 17)
+ zcoord= (13, 12)  bond= 16
+ zcoord= (14, 12)  bond= 4
+ zcoord= (15, 12)  bond= 4
+ zcoord= (16, 12)  bond= 4
+ zcoord= (17, 12)  bond= 4
+ hcoord= (17, 12)  bond= 16
+ hcoord= (17, 13)  bond= 4
+ hcoord= (17, 14)  bond= 4
+ hcoord= (17, 15)  bond= 4
+ hcoord= (17, 16)  bond= 4
+
+ddir= 0.0118067342273
+
+[test_ddir3] A/B= (12, 12) (18, 16)
+ zcoord= (13, 12)  bond= 16
+ zcoord= (14, 12)  bond= 4
+ zcoord= (15, 12)  bond= 4
+ zcoord= (16, 12)  bond= 4
+ zcoord= (17, 12)  bond= 4
+ zcoord= (18, 12)  bond= 16
+ hcoord= (18, 12)  bond= 4
+ hcoord= (18, 13)  bond= 4
+ hcoord= (18, 14)  bond= 4
+ hcoord= (18, 15)  bond= 4
+
+ddir= 0.00593538650083
+
+
