@@ -12,4 +12,4 @@ Some explanation of the codes:
    * lr_test_mpi - long-range Heisenberg model (MPI)
 
  * ls3d    - 	fermionic correlation functions as TNS
-              SOME TESTING SUBROUTINES CAN BE FOUND HERE.
+              Test subroutiens can be found in directory: latticesimulation/ls3d/tests/
