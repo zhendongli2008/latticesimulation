@@ -25,16 +25,15 @@ msize = 14
 
 # 5-by-5 is a resonable test
 
-m = 2 #3 #4-inf #8 #10
+m = 7 #3 #4-inf #8 #10
 n = 2*m+1
-a = 1.0
 print 'lattice n=',n
 print 't3d.shape=',(n**3,n**3)
 print
 
 # Test Z: for small m (longer-range), clearly large n is required!
 for idx,mass in enumerate([1.0,1.e-1,1.e-2,1.e-3]):
-   t3d = exact2d.genT3d(n,mass*a)
+   t3d = exact2d.genT3d(n,mass)
    t3d = t3d.reshape((n**3,n**3))
    tinv = scipy.linalg.inv(t3d)
    tinv = tinv.reshape((n,n,n,n,n,n))
@@ -45,22 +44,24 @@ for idx,mass in enumerate([1.0,1.e-1,1.e-2,1.e-3]):
    fac = 4*numpy.pi
    def exactFun(x):
       return numpy.exp(-mass*x)/x/fac
-   xmax = a*(m+1)*numpy.sqrt(3)
+   xmax = (m+1)*numpy.sqrt(3)
    x = numpy.linspace(0.01,xmax,100)
    y = exactFun(x)*fac
    
    plt.subplot(221+idx)
    plt.plot(x,1/x,'k--',label='1/r (reference)')
    plt.plot(x,y,'k-',label='Yukawa mass='+str(mass))
-   tinv = tinv/a*fac
-   xz = numpy.arange(m+1)*a
-   yz = tinv[m,m,m][m,m,range(m,n)]
+   
+   tinv = tinv*fac
+   xz = numpy.arange(1,m+1)
+   yz = tinv[m,m,m][m,m,range(m+1,n)]
    plt.plot(xz,yz,'rx',
 	 markeredgewidth=1,\
 	 markersize=10,linewidth=1,\
    	 label='z-direct: (m,m,n)-(m,m,m)')
-   xd = numpy.arange(m+1)*a*numpy.sqrt(3)
-   yd = tinv[m,m,m][range(m,n),range(m,n),range(m,n)]
+
+   xd = numpy.arange(1,m+1)*numpy.sqrt(3)
+   yd = tinv[m,m,m][range(m+1,n),range(m+1,n),range(m+1,n)]
    plt.plot(xd,yd,'b+',
 	 markeredgewidth=1,\
 	 markersize=10,linewidth=1,\
@@ -69,27 +70,27 @@ for idx,mass in enumerate([1.0,1.e-1,1.e-2,1.e-3]):
    plt.xlim(xmax=numpy.max(xd+1.0))
    plt.ylim(ymin=-0.1,ymax=1.2)
   
-   #=================
-   # TNS Contraction 
-   #=================
-   iprt = 1
-   auxbond = 50
-   iop = 0
-   if iop == 0:
-      result = gen3d.initialization(n,mass**2,iprt,auxbond)
-      scale,zpeps,local2,local1a,local1b = result
-      gen3d.tensor_dump(scale,zpeps,local2,local1a,local1b)
-   else:
-      scale,zpeps,local2,local1a,local1b = gen3d.tensor_load()
-      zval = gen3d.test_zdir(m,n,scale,zpeps,local2,local1a,local1b,auxbond,off=1)
-      print
-      print 'zval0=',yz[1:]
-      print 'zval1=',zval,zval*fac
-      dval = gen3d.test_ddir(m,n,scale,zpeps,local2,local1a,local1b,auxbond,off=1)
-      print
-      print 'dval0=',yd[1:]
-      print 'dval1=',dval,dval*fac
-   exit()
+#   #=================
+#   # TNS Contraction 
+#   #=================
+#   iprt = 1
+#   auxbond = 50
+#   iop = 0
+#   if iop == 0:
+#      result = gen3d.initialization(n,mass**2,iprt,auxbond)
+#      scale,zpeps,local2,local1a,local1b = result
+#      gen3d.tensor_dump(scale,zpeps,local2,local1a,local1b)
+#   else:
+#      scale,zpeps,local2,local1a,local1b = gen3d.tensor_load()
+#      zval = gen3d.test_zdir(m,n,scale,zpeps,local2,local1a,local1b,auxbond,off=1)
+#      print
+#      print 'zval0=',yz[1:]
+#      print 'zval1=',zval,zval*fac
+#      dval = gen3d.test_ddir(m,n,scale,zpeps,local2,local1a,local1b,auxbond,off=1)
+#      print
+#      print 'dval0=',yd[1:]
+#      print 'dval1=',dval,dval*fac
+#   exit()
 
 # final   
 #plt.legend()
