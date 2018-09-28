@@ -1,3 +1,7 @@
+Subroutines for tensor networks representation of long-range interactions.
+
+Written by Zhendong Li (2018)
+
 Some explanation of the codes:
 
  * ls1d    -	1D simulation tools
@@ -8,4 +12,4 @@ Some explanation of the codes:
    * lr_test_mpi - long-range Heisenberg model (MPI)
 
  * ls3d    - 	fermionic correlation functions as TNS
- 
+              Test subroutiens can be found in directory: latticesimulation/ls3d/tests/
